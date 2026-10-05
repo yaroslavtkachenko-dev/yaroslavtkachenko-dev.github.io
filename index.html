@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>PicShift, a batch photo converter for Mac - Yaroslav Tkachenko</title>
+<meta name="description" content="PicShift converts and resizes a folder of photos on your Mac, strips location and camera data, and tells you what the batch will weigh before it writes a file.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://yaroslavtkachenko-dev.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yaroslavtkachenko-dev.github.io/">
+<meta property="og:title" content="PicShift, a batch photo converter for Mac">
+<meta property="og:description" content="Eight photos, 14.66 MB. PicShift said about 4.33 MB. They came out at 4.09 MB.">
+<meta property="og:image" content="https://yaroslavtkachenko-dev.github.io/images/og-picshift.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="PicShift: eight photos, 14.66 MB; PicShift said about 4.33 MB; they came out at 4.09 MB.">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* Light, the way Mac software is shown: white ground, grey bands, each
+     app's own window as the one object on stage. Two text greys (near-black
+     for what is read, grey for what labels or qualifies it), one blue for
+     what you can act on (the blue of PicShift's own Convert button), five
+     type sizes, the system font tracked the way Apple tracks it. */
+  :root{
+    --ground:#FFFFFF;
+    --band:#F5F5F7;
+    --rule:#D2D2D7;
+    --text:#1D1D1F;
+    --muted:#6E6E73;
+    --action:#0071E3;
+    --link:#0066CC;
+    --sans:system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --gut:clamp(1.25rem,5vw,4rem);
+    --section:clamp(4.5rem,9vw,7.5rem);
+    --ease:cubic-bezier(.25,.8,.25,1);
+    color-scheme:light;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  /* letter-spacing in em is fixed where it is set and inherited as a length,
+     so every size below sets its own */
+  body{
+    margin:0;background:var(--ground);color:var(--text);
+    font:17px/1.5 var(--sans);letter-spacing:-.022em;
+    -webkit-font-smoothing:antialiased;text-wrap:pretty;
+  }
+  img{display:block;max-width:100%;height:auto}
+  h1,h2,h3{text-wrap:balance}
+  section[id],article[id]{scroll-margin-top:4rem}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline;text-underline-offset:.2em}
+  a,button{transition:color .15s ease,background-color .15s ease,box-shadow .15s ease}
+  :focus-visible{outline:2px solid var(--action);outline-offset:3px}
+  ::selection{background:rgba(0,113,227,.18)}
+  .shell{max-width:76rem;margin:0 auto;padding-inline:var(--gut)}
+  .center{text-align:center}
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip{position:absolute;left:-999px}
+  .skip:focus{left:1rem;top:1rem;z-index:20;background:var(--text);color:#fff;padding:.5rem .9rem;border-radius:6px}
+
+  /* the small size: everything that labels, qualifies or navigates */
+  .bar,.apps .label,.steps button,.terms,.status,.facts,.note,.caption,footer,.lightbox figcaption{
+    font-size:.875rem;letter-spacing:-.016em;
+  }
+
+  /* ---------- bar ---------- */
+  .bar{
+    position:sticky;top:0;z-index:10;
+    background:rgba(255,255,255,.8);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.08);
+  }
+  .bar .shell{display:flex;align-items:center;gap:1.5rem;min-height:3.25rem}
+  .name{font-weight:600;color:var(--text)}
+  .bar nav{margin-left:auto;display:flex;gap:1.5rem}
+  .bar a{color:var(--text)}
+  .bar nav a{color:var(--muted)}
+  .bar a:hover{color:var(--text);text-decoration:none}
+  /* a finger-sized hit area: padded out and pulled back by the same amount, so nothing moves */
+  .bar a,footer a,.contact a{display:inline-block;padding-block:.7rem;margin-block:-.7rem}
+
+  /* ---------- the apps ---------- */
+  /* an app going round the back of the row passes the page's edge; nothing
+     sideways ever scrolls */
+  .hero{padding-top:clamp(3rem,7vw,5.5rem);overflow-x:clip}
+  /* The three apps stand in a row on one baseline, as in the Dock: the one
+     on show at full size over the middle of the page, the other two smaller
+     either side of it. The row closes on itself, so each side always has an
+     app to turn to, and choosing one slides the row along by a slot (--x is
+     each app's place: -1, 0 or 1). Apple draws an icon's body at 824 of
+     1024, so each PNG's own margin is the space around it; the shadow is the
+     one Finder gives an icon */
+  .apps{
+    --icon:clamp(5.5rem,10vw,7rem);
+    --slot:calc(var(--icon) + clamp(1rem,4vw,3rem));
+    --small:.56;
+    position:relative;height:calc(var(--icon) + 2.25rem);
+  }
+  .apps [role=tab]{
+    position:absolute;top:0;left:calc(50% - var(--slot) / 2);width:var(--slot);
+    display:flex;flex-direction:column;align-items:center;
+    padding:0;border:0;border-radius:20px;background:none;color:var(--muted);
+    font-family:inherit;cursor:pointer;
+    transform:translateX(calc(var(--x) * var(--slot)));
+    transition:transform .55s var(--ease);
+  }
+  .apps img{
+    width:var(--icon);transform:scale(var(--small));transform-origin:50% 100%;
+    filter:drop-shadow(0 10px 22px rgba(0,0,0,.16));
+    transition:transform .55s var(--ease);
+  }
+  /* the chosen app's label is its name, at the size the name had alone; set
+     solid at the foot of one box, every label stands on the same baseline
+     to within a pixel, whatever its size */
+  .apps .label{display:flex;align-items:flex-end;height:2.25rem;line-height:1;white-space:nowrap}
+  .apps [aria-selected=true]{cursor:default}
+  .apps [aria-selected=true] img{transform:none}
+  .apps [aria-selected=true] .label{font-size:1.25rem;font-weight:600;letter-spacing:-.01em;color:var(--text)}
+  /* the icons are something to press, not pictures to drag or save */
+  .apps{-webkit-touch-callout:none}
+  .apps img{-webkit-user-drag:none;user-select:none}
+  /* the keyboard ring hugs the icon's own rounded body, so it never runs
+     into the name under it or the line under that */
+  .apps [role=tab]:focus-visible{outline:none}
+  .apps [role=tab]:focus-visible img{outline:2px solid var(--action);outline-offset:-.3rem;border-radius:27%}
+  @media (hover:hover){
+    /* the pointer gets an answer at once; the slide along the row takes its time */
+    .apps [aria-selected=false]:hover img{transform:scale(calc(var(--small) + .06));transition-duration:.25s}
+    .apps [aria-selected=false]:hover .label{color:var(--text)}
+  }
+  /* set before the first paint, when an address opens on another app */
+  .apps.still [role=tab],.apps.still img{transition:none}
+
+  /* Flipping to another app turns a page: the row and the page around it
+     stay put while the app's own part slides out the full width one way and
+     the next one in from the other, side by side and never through each
+     other, the way the row moves. Each app's part is a layer of its own, so
+     the turn only moves what is already drawn: a View Transition would
+     first photograph the whole tall page, shadows and all, and the screen
+     stood still for a tenth of a second while it did */
+  .slides{position:relative}
+  .slide{will-change:transform}
+  /* the page on its way out lies over the one coming in, out of the flow,
+     cut to the new page's height so it never covers what follows */
+  .slide.leaving{position:absolute;top:0;left:0;width:100%}
+  .slides.turning{overflow:clip}
+  /* an address that opens on an app lands at the top, with the row in view */
+  .slide{scroll-margin-top:20rem}
+
+  .kind{margin:.2rem 0 0;color:var(--muted)}
+  .intro{padding-bottom:clamp(2.5rem,5vw,3.5rem)}
+  /* The receipt. Set on a decimal tab: whole part right-aligned in one
+     column, fraction in the next, unit in a third, so the points stand in a
+     line whatever the weight; the total is semibold. The size is whatever
+     lets it (12.1 em in SF) fit the column, up to 76 px; the spare 7% is for
+     wider system fonts. Screen readers get the sentence, not the grid. */
+  .receipt{margin:clamp(2rem,4.5vw,3rem) 0 0}
+  .ledger,.claim{
+    display:grid;width:fit-content;max-width:100%;margin-inline:auto;text-align:left;
+    font-weight:300;line-height:1.08;letter-spacing:-.01em;color:var(--muted);
+  }
+  .ledger{grid-template-columns:1fr auto auto auto;align-items:last baseline;font-size:min(4.75rem,calc((100vw - 2 * var(--gut)) / 12.9))}
+  .ledger .int{padding-left:1.1em;text-align:right;font-variant-numeric:tabular-nums}
+  .ledger .frac{font-variant-numeric:tabular-nums}
+  .ledger .unit{padding-left:.4em;font-size:max(.42em,11px);font-weight:400;letter-spacing:.02em}
+  .ledger .rule,.claim .rule{grid-column:1 / -1;height:1px;margin:.16em 0 .12em;background:var(--rule)}
+  .ledger .t,.claim .t{color:var(--text);font-weight:600}
+  .ledger .unit.t{color:var(--muted);font-weight:400}
+  /* The other apps' receipts are two lines of words, set the same way: what
+     you would think in grey, what the app found in semibold. Each longer
+     line is 11.9 em in SF, so with the same spare 7% they come out at the
+     ledger's size and nearly its width */
+  .claim{font-size:min(4.75rem,calc((100vw - 2 * var(--gut)) / 12.8))}
+  .lede{
+    max-width:36rem;margin:clamp(2rem,4vw,2.75rem) auto 0;
+    font-size:clamp(1.0625rem,1.6vw,1.25rem);line-height:1.5;letter-spacing:-.01em;
+  }
+  .act{display:flex;flex-direction:column;align-items:center;gap:.9rem;margin-top:2rem}
+  .button{
+    display:inline-block;background:var(--action);color:#fff;
+    font-weight:500;padding:.75rem 1.4rem;border-radius:980px;
+  }
+  .button:hover{background:#0077ED;text-decoration:none}
+  .button:active{background:#006EDB}
+  .button.soon{background:var(--rule,#d2d2d7);color:var(--muted);cursor:default}
+  .button.soon:hover{background:var(--rule,#d2d2d7)}
+  .terms{margin:0;max-width:26rem;color:var(--muted);text-wrap:balance}
+  code{font-family:var(--mono);font-size:.875em;letter-spacing:0;color:var(--text)}
+
+  /* ---------- each app's window ---------- */
+  .stage{padding-bottom:var(--section)}
+  /* PicShift's own segmented control, in its light appearance */
+  .steps{
+    display:flex;width:fit-content;margin:0 auto;gap:2px;padding:2px;
+    background:rgba(118,118,128,.12);border-radius:9px;
+  }
+  .steps button{
+    font-family:inherit;font-weight:500;color:var(--text);
+    background:transparent;border:0;border-radius:7px;padding:.4rem 1.1rem;cursor:pointer;
+    position:relative;
+  }
+  /* drawn at the app's size, but the hit area reaches past it to a finger's 44 px */
+  .steps button::after{content:"";position:absolute;inset:-7px 0}
+  .steps button[aria-selected="true"]{background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04)}
+  .wins{display:grid;margin-top:2rem}
+  /* the tab panel wraps the figure: a figure with a caption cannot take a role */
+  .win{grid-area:1 / 1}
+  .stage figure{margin:0}
+  /* the new state fades in on top; the old one stays whole underneath until it
+     has, so the window never dims halfway through. It is inert from the first
+     moment, so nobody can tab into it or have it read out while it lingers */
+  .win:not(.on){opacity:0;visibility:hidden;transition:opacity 0s .4s,visibility 0s .4s}
+  .win.on{z-index:1;transition:opacity .4s ease}
+  .win:not(.on) figcaption{visibility:hidden;transition:none}
+  .zoom{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in;line-height:0}
+  .zoom:focus-visible{outline-offset:6px}
+  /* a hairline, a contact shadow and a soft one, as macOS draws a window on
+     a light desktop; the 1 pt inner rim is in the image itself */
+  .mac img{
+    width:100%;
+    filter:drop-shadow(0 0 .5px rgba(0,0,0,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.14)) drop-shadow(0 30px 60px rgba(0,0,0,.24));
+  }
+  /* Flist's panel and TidyShelf's popup are small things: shown at the size
+     they have on screen, not blown up to fill the stage */
+  .shot{display:grid;justify-items:center}
+  .shot .zoom{width:auto;display:inline-block}
+  .shot.panel img{width:22rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.4)) drop-shadow(0 18px 36px rgba(0,0,0,.22))}
+  /* the popup and the reader are white on white: a hairline keeps their edge */
+  .shot.popup img{width:20rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.45)) drop-shadow(0 14px 32px rgba(0,0,0,.14))}
+  .shot.page img{width:34rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.45)) drop-shadow(0 14px 32px rgba(0,0,0,.14))}
+  .stage figcaption{
+    position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:.2rem 1rem;
+    margin-top:2rem;color:var(--muted);text-align:center;
+  }
+  .stage figcaption b{
+    font-size:1.25rem;font-weight:600;letter-spacing:-.01em;color:var(--text);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+
+  /* ---------- the other two ---------- */
+  h2{
+    margin:0 0 clamp(2rem,4vw,3rem);
+    font-size:clamp(1.75rem,3.4vw,2.5rem);font-weight:600;letter-spacing:0;line-height:1.15;
+  }
+  /* Under the app on show, the two that are not: the row above turns to an
+     app, these cards say what the other two are and send you up to them */
+  .others{background:var(--band);padding-block:var(--section)}
+  .pair{display:grid;gap:1.25rem}
+  .tile{
+    display:grid;grid-template-rows:auto 1fr;gap:2.5rem;
+    background:var(--ground);border-radius:24px;padding:clamp(2rem,4.5vw,3.25rem) clamp(1.5rem,4vw,3rem);
+    text-align:center;
+  }
+  /* the card of the app on top steps aside; display:grid would keep it */
+  .tile[hidden]{display:none}
+  .tile .appicon{width:4rem;margin:0 auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.14))}
+  .tile h3{margin:.9rem 0 .6rem;font-size:1.75rem;font-weight:600;letter-spacing:0;line-height:1.2}
+  .tile p{margin:0 auto .6rem;max-width:26rem}
+  .tile .status{max-width:24rem;color:var(--muted)}
+  .tile .links{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem 1.75rem;margin:1rem auto 0}
+  .tile .links a{display:inline-block;padding-block:.7rem;margin-block:-.7rem}
+  /* each card shows its screenshot whole, at the size it has on screen: a
+     cut through the app reads as a broken page, not as a choice. A fixed
+     width, held in by img's max-width: as a percentage it would leave the
+     shrink-wrapped button 0 px wide until the image loads, and a lazy image
+     that is 0 px wide is never loaded */
+  .preview{margin:0;display:grid;justify-items:center;align-content:end}
+  .preview .zoom{width:auto;display:inline-block}
+  .preview.window img{width:30rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.14)) drop-shadow(0 18px 36px rgba(0,0,0,.2))}
+  .preview.panel img{width:21rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.4)) drop-shadow(0 18px 36px rgba(0,0,0,.22))}
+  .preview.popup img{width:17.5rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.45)) drop-shadow(0 14px 32px rgba(0,0,0,.14))}
+  .preview figcaption{margin-top:1.25rem;color:var(--muted)}
+  /* the two cards share rows, so both screenshots stand on one line at the
+     cards' foot however long either text runs */
+  @media (min-width:56rem){
+    .pair{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+    .tile{grid-row:span 2;grid-template-rows:subgrid}
+  }
+
+  /* ---------- who, list, footer ---------- */
+  .who{padding-block:var(--section)}
+  .who .shell{max-width:44rem}
+  .portrait{width:6rem;height:6rem;margin:0 auto 1.75rem;border-radius:50%;object-fit:cover}
+  .who h2,.list h2{margin-bottom:1rem}
+  .who p{margin:0}
+  .who .facts{margin-top:1rem;color:var(--muted)}
+  .who .contact{margin-top:1.25rem;display:flex;justify-content:center;gap:1.5rem}
+  .list{background:var(--band);padding-block:var(--section) calc(var(--section) * .8)}
+  .list p{margin:0 auto;max-width:34rem}
+  .list .note{max-width:26rem;color:var(--muted)}
+  footer{background:var(--band);color:var(--muted)}
+  footer .shell{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;padding-block:1.25rem 2.5rem;border-top:1px solid var(--rule)}
+  footer .links{margin-left:auto;display:flex;flex-wrap:wrap;gap:.75rem 1.5rem}
+  footer a{color:var(--muted)}
+  footer a:hover{color:var(--text)}
+
+  /* ---------- lightbox ---------- */
+  .lightbox{inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;
+    padding:clamp(1rem,3vw,2rem);background:transparent;border:0;color:var(--text);overflow:hidden}
+  .lightbox[open]{display:grid;place-items:center}
+  .lightbox::backdrop{background:rgba(245,245,247,.94);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  /* the page under an open screenshot stays where it was; the gutter is kept,
+     so where scrollbars take room the page does not jump sideways */
+  html{scrollbar-gutter:stable}
+  html:has(.lightbox[open]){overflow:hidden}
+  .lightbox figure{display:grid;justify-items:center;margin:0;max-width:100%;max-height:100%}
+  .lightbox img{max-height:calc(100dvh - 7rem);object-fit:contain;filter:drop-shadow(0 0 .5px rgba(0,0,0,.5)) drop-shadow(0 24px 48px rgba(0,0,0,.2))}
+  .lightbox figcaption{display:flex;gap:.8rem;margin:1.25rem 4rem 0;color:var(--muted);text-align:center}
+  .lightbox-count{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .lightbox-close,.lightbox-nav{
+    position:absolute;z-index:1;display:grid;place-items:center;width:2.75rem;height:2.75rem;padding:0;
+    font:inherit;font-size:1.25rem;color:var(--text);background:#fff;
+    border:1px solid var(--rule);border-radius:50%;cursor:pointer;
+  }
+  .lightbox-close{top:clamp(1rem,3vw,2rem);right:clamp(1rem,3vw,2rem)}
+  .lightbox-nav{top:50%;transform:translateY(-50%)}
+  .lightbox-nav.prev{left:clamp(.75rem,2vw,2rem)}
+  .lightbox-nav.next{right:clamp(.75rem,2vw,2rem)}
+  .lightbox-close:hover,.lightbox-nav:hover{background:var(--band)}
+
+  @media (max-width:40rem){
+    .bar nav a:not(.keep){display:none}
+    /* on a phone the row is tighter and the two apps beside the chosen one
+       smaller still, so all three fit the width */
+    .apps{--icon:5rem;--slot:5.75rem;--small:.5}
+    .apps [aria-selected=false] .label{font-size:.8125rem}
+    /* the full width, shared out so the longest label still fits on one line */
+    .steps{width:auto}
+    .steps button{flex:1 1 auto;padding:.45rem .5rem;white-space:nowrap}
+    /* The window at a size its numbers can be read at. Fitted to a phone it
+       was a third of its real size; here its right edge, where the sidebar and
+       the sizes are, stays on screen and the rest runs off the left edge,
+       which never scrolls, so nothing has to clip it or its shadow. The whole
+       window opens on a tap */
+    .mac img{width:225%;max-width:none;margin-left:-125%}
+    footer .links{margin-left:0;width:100%}
+    .lightbox figcaption{margin-inline:.5rem}
+    .lightbox-nav{top:auto;bottom:1.25rem;transform:none}
+    .lightbox-nav.prev{left:calc(50% - 3.25rem)}
+    .lightbox-nav.next{right:calc(50% - 3.25rem)}
+  }
+  /* below about 345 px the name and both links no longer fit on one line:
+     the bar steps down a size and closes up */
+  @media (max-width:22rem){
+    .bar{font-size:.8125rem}
+    .bar .shell,.bar nav{gap:1rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+<!-- without scripts the three apps simply stand one under the other -->
+<noscript><style>.slide[hidden]{display:block}</style></noscript>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <div class="shell">
+    <a class="name" href="/">Yaroslav Tkachenko</a>
+    <nav>
+      <a class="keep" href="#apps">Apps</a>
+      <a href="#who">About</a>
+      <a class="keep" href="#email">Release emails</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero center" id="apps">
+  <div class="shell">
+    <div class="apps" role="tablist" aria-label="Apps">
+      <button type="button" role="tab" id="tab-picshift" aria-controls="picshift" aria-selected="true" style="--x:0">
+        <img src="images/icon-picshift-256.png" width="256" height="256" alt="" />
+        <span class="label">PicShift</span>
+      </button>
+      <button type="button" role="tab" id="tab-flist" aria-controls="flist" aria-selected="false" tabindex="-1" style="--x:1">
+        <img src="images/icon-fgh-256.png" width="256" height="256" alt="" />
+        <span class="label">Flist</span>
+      </button>
+      <button type="button" role="tab" id="tab-tidyshelf" aria-controls="tidyshelf" aria-selected="false" tabindex="-1" style="--x:-1">
+        <img src="images/icon-tidyshelf.png" width="160" height="160" alt="" />
+        <span class="label">TidyShelf</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="slides">
+
+    <div class="slide" id="picshift" role="tabpanel" aria-labelledby="tab-picshift">
+      <div class="shell intro">
+        <p class="kind">A batch photo converter for Mac.</p>
+        <h1 class="receipt">
+          <span class="sr-only">Eight photos, 14.66&nbsp;MB. PicShift said about 4.33&nbsp;MB. They came out at 4.09&nbsp;MB.</span>
+          <span class="ledger" aria-hidden="true">
+            <span class="item">Eight photos</span><span class="int">14</span><span class="frac">.66</span><span class="unit">MB</span>
+            <span class="item">PicShift said about</span><span class="int">4</span><span class="frac">.33</span><span class="unit">MB</span>
+            <span class="rule"></span>
+            <span class="item t">They came out at</span><span class="int t">4</span><span class="frac t">.09</span><span class="unit t">MB</span>
+          </span>
+        </h1>
+        <p class="lede">
+          Drop in photos or a whole folder. PicShift converts and resizes them,
+          strips location and camera data, and tells you what the batch will weigh
+          before it writes a single file. Nothing is uploaded.
+        </p>
+        <div class="act">
+          <span class="button soon" role="link" aria-disabled="true">Download on the Mac App Store</span>
+          <p class="terms">
+            In review at Apple, coming to the Mac App Store soon. <a href="#email">Email me the day it&rsquo;s out</a>.
+            Free for your first 70&nbsp;photo conversions, then one purchase, no subscription:
+            $7.99 for the first two weeks after launch, then $9.99. macOS&nbsp;14 or later.
+          </p>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="shell">
+          <div class="steps" role="tablist" aria-label="PicShift states">
+            <button type="button" role="tab" id="step-preview" aria-controls="state-preview" aria-selected="false" tabindex="-1">Before and after</button>
+            <button type="button" role="tab" id="step-forecast" aria-controls="state-forecast" aria-selected="true">Forecast</button>
+            <button type="button" role="tab" id="step-result" aria-controls="state-result" aria-selected="false" tabindex="-1">Result</button>
+          </div>
+          <div class="wins">
+            <div class="win" id="state-preview" role="tabpanel" aria-labelledby="step-preview" inert><figure class="mac">
+              <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog">
+                <img src="images/picshift-preview-1536.webp" width="2196" height="1522" decoding="async"
+                     srcset="images/picshift-preview-768.webp 768w, images/picshift-preview-1536.webp 1536w, images/picshift-preview-2196.webp 2196w"
+                     sizes="(max-width: 40rem) 225vw, (min-width: 80rem) 68rem, 92vw"
+                     alt="PicShift with eight photos queued for JPEG at quality 70, longest side 1920 px, location and camera info removed. Under the list, a city skyline shows before and after side by side at actual size: 1.74 MB before, about 591 kB after." />
+                <span class="sr-only">Open full size</span>
+              </button>
+              <figcaption><b>1.74&nbsp;MB &rarr; &asymp;&thinsp;591&nbsp;kB</b> <span class="caption">One photo, before and after, at actual size</span></figcaption>
+            </figure></div>
+            <div class="win on" id="state-forecast" role="tabpanel" aria-labelledby="step-forecast"><figure class="mac">
+              <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog">
+                <img src="images/picshift-forecast-1536.webp" width="2196" height="1522" fetchpriority="high" decoding="async"
+                     srcset="images/picshift-forecast-768.webp 768w, images/picshift-forecast-1536.webp 1536w, images/picshift-forecast-2196.webp 2196w"
+                     sizes="(max-width: 40rem) 225vw, (min-width: 80rem) 68rem, 92vw"
+                     alt="PicShift with eight photos queued for HEIC at quality 70, half size, location and camera info removed. Before converting it forecasts 14.66 MB down to about 4.33 MB, about 70% smaller." />
+                <span class="sr-only">Open full size</span>
+              </button>
+              <figcaption><b>14.66&nbsp;MB &rarr; &asymp;&thinsp;4.33&nbsp;MB</b> <span class="caption">Eight photos, forecast before a single file is written</span></figcaption>
+            </figure></div>
+            <div class="win" id="state-result" role="tabpanel" aria-labelledby="step-result" inert><figure class="mac">
+              <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog">
+                <img src="images/picshift-result-1536.webp" width="2196" height="1522" decoding="async"
+                     srcset="images/picshift-result-768.webp 768w, images/picshift-result-1536.webp 1536w, images/picshift-result-2196.webp 2196w"
+                     sizes="(max-width: 40rem) 225vw, (min-width: 80rem) 68rem, 92vw"
+                     alt="The same batch converted: 8 of 8 files done, 14.66 MB down to 4.09 MB, 10.57 MB saved, each file checked off with its final size." />
+                <span class="sr-only">Open full size</span>
+              </button>
+              <figcaption><b>14.66&nbsp;MB &rarr; 4.09&nbsp;MB</b> <span class="caption">The real result: 10.57&nbsp;MB saved, each file checked off</span></figcaption>
+            </figure></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" id="flist" role="tabpanel" aria-labelledby="tab-flist" hidden>
+      <div class="shell intro">
+        <p class="kind">A text cleaner for the Mac menu bar.</p>
+        <h1 class="receipt claim">
+          <span>The text looked clean.</span>
+          <span class="rule"></span>
+          <span class="t">It had 8 hidden characters.</span>
+        </h1>
+        <p class="lede">
+          Flist cleans text the moment you copy it: formatting, tracking
+          parameters like <code>utm_*</code>, and the invisible characters some
+          AI tools leave behind. Everything happens on your own Mac.
+        </p>
+        <div class="act">
+          <a class="button" href="#email">Email me when Flist ships</a>
+          <p class="terms">In development, not on sale yet. It will be free to try for 7&nbsp;days, then a one-time purchase on the Mac App Store.</p>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="shell">
+          <figure class="shot panel">
+            <button class="zoom" type="button" data-gallery="flist" aria-haspopup="dialog">
+              <img src="images/fgh-clipboard-history-680.webp" width="680" height="810" loading="lazy" decoding="async"
+                   srcset="images/fgh-clipboard-history-340.webp 340w, images/fgh-clipboard-history-680.webp 680w" sizes="22rem"
+                   alt="Flist clipboard history: 8 hidden characters removed from copied text and 4 trackers stripped from a link." />
+              <span class="sr-only">Open full size</span>
+            </button>
+            <figcaption><b>8&nbsp;hidden characters removed</b> <span class="caption">Every entry in the history says what it fixed</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" id="tidyshelf" role="tabpanel" aria-labelledby="tab-tidyshelf" hidden>
+      <div class="shell intro">
+        <p class="kind">A read-later extension for Chrome.</p>
+        <h1 class="receipt claim">
+          <span>Save it now.</span>
+          <span class="rule"></span>
+          <span class="t">Read it when you have time.</span>
+        </h1>
+        <p class="lede">
+          One click saves the page you are on. Later it opens in a clean reader,
+          where you can highlight what matters. Everything you save stays in your
+          browser, with no account and no sync server.
+        </p>
+        <div class="act">
+          <a class="button" href="https://chromewebstore.google.com/detail/gonfhagnfhpgojiffekkpopdhafenoop">Add TidyShelf to Chrome</a>
+          <p class="terms">Free on the Chrome Web Store, rated 5.0 from 3&nbsp;ratings. Version&nbsp;1.0.7, updated 7&nbsp;October&nbsp;2026.</p>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="shell">
+          <div class="steps" role="tablist" aria-label="TidyShelf views">
+            <button type="button" role="tab" id="step-save" aria-controls="state-save" aria-selected="true">Save</button>
+            <button type="button" role="tab" id="step-read" aria-controls="state-read" aria-selected="false" tabindex="-1">Read</button>
+          </div>
+          <div class="wins">
+            <div class="win on" id="state-save" role="tabpanel" aria-labelledby="step-save"><figure class="shot popup">
+              <button class="zoom" type="button" data-gallery="tidyshelf" aria-haspopup="dialog">
+                <img src="images/tidyshelf-popup-760.webp" width="760" height="1200" loading="lazy" decoding="async"
+                     srcset="images/tidyshelf-popup-380.webp 380w, images/tidyshelf-popup-760.webp 760w" sizes="20rem"
+                     alt="TidyShelf's popup: a button to save the open page, a search box, filters for all, unread and each tag, and the library grouped by day." />
+                <span class="sr-only">Open full size</span>
+              </button>
+              <figcaption><span class="caption">What you saved, by day and by tag</span></figcaption>
+            </figure></div>
+            <div class="win" id="state-read" role="tabpanel" aria-labelledby="step-read" inert><figure class="shot page">
+              <button class="zoom" type="button" data-gallery="tidyshelf" aria-haspopup="dialog">
+                <img src="images/tidyshelf-reader-1080.webp" width="1080" height="1114" loading="lazy" decoding="async"
+                     srcset="images/tidyshelf-reader-540.webp 540w, images/tidyshelf-reader-1080.webp 1080w" sizes="34rem"
+                     alt="TidyShelf's reader: a saved article in a clean serif layout, two sentences highlighted in yellow and green, and controls for highlight color, text size and dark mode." />
+                <span class="sr-only">Open full size</span>
+              </button>
+              <figcaption><span class="caption">Four highlight colors, the text size you like, light or dark</span></figcaption>
+            </figure></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="others" id="more">
+  <div class="shell">
+    <h2 class="center">Two more apps</h2>
+    <div class="pair">
+      <article class="tile" data-app="picshift" hidden>
+        <div class="copy">
+          <img class="appicon" src="images/icon-picshift-256.png" width="256" height="256" alt="" />
+          <h3>PicShift</h3>
+          <p>
+            Converts and resizes a folder of photos, strips location and camera
+            data, and tells you what the batch will weigh before it writes a file.
+          </p>
+          <p class="status">Free for your first 70&nbsp;photo conversions, then one purchase, no subscription. macOS&nbsp;14 or later.</p>
+          <p class="links">
+            <a href="#picshift">Learn more<span class="sr-only"> about PicShift</span></a>
+            <a href="#email">Email me when it ships</a>
+          </p>
+        </div>
+        <figure class="preview window">
+          <button class="zoom" type="button" data-gallery="card-picshift" aria-haspopup="dialog">
+            <img src="images/picshift-forecast-768.webp" width="2196" height="1522" loading="lazy" decoding="async"
+                 srcset="images/picshift-forecast-768.webp 768w, images/picshift-forecast-1536.webp 1536w" sizes="30rem"
+                 alt="PicShift with eight photos queued for HEIC at quality 70, half size, location and camera info removed. Before converting it forecasts 14.66 MB down to about 4.33 MB, about 70% smaller." />
+            <span class="sr-only">Open full size</span>
+          </button>
+          <figcaption><span class="caption">Eight photos, forecast before a single file is written</span></figcaption>
+        </figure>
+      </article>
+      <article class="tile" data-app="flist">
+        <div class="copy">
+          <img class="appicon" src="images/icon-fgh-256.png" width="256" height="256" alt="" />
+          <h3>Flist</h3>
+          <p>
+            Cleans text the moment you copy it: formatting, tracking parameters
+            like <code>utm_*</code>, and the invisible characters some AI tools
+            leave behind.
+          </p>
+          <p class="status">In development. It will be free to try for 7&nbsp;days, then a one-time purchase on the Mac App Store.</p>
+          <p class="links">
+            <a href="#flist">Learn more<span class="sr-only"> about Flist</span></a>
+            <a href="#email">Email me when it ships</a>
+          </p>
+        </div>
+        <figure class="preview panel">
+          <button class="zoom" type="button" data-gallery="card-flist" aria-haspopup="dialog">
+            <img src="images/fgh-clipboard-history-680.webp" width="680" height="810" loading="lazy" decoding="async"
+                 srcset="images/fgh-clipboard-history-340.webp 340w, images/fgh-clipboard-history-680.webp 680w" sizes="21rem"
+                 alt="Flist clipboard history: 8 hidden characters removed from copied text and 4 trackers stripped from a link." />
+            <span class="sr-only">Open full size</span>
+          </button>
+          <figcaption><span class="caption">Every entry says what it fixed</span></figcaption>
+        </figure>
+      </article>
+      <article class="tile" data-app="tidyshelf">
+        <div class="copy">
+          <img class="appicon" src="images/icon-tidyshelf.png" width="160" height="160" alt="" />
+          <h3>TidyShelf</h3>
+          <p>
+            Save an article now, read it when you actually have time. Everything
+            you save stays in your browser, with no account and no sync server.
+          </p>
+          <p class="status">Free on the Chrome Web Store, rated 5.0 from 3&nbsp;ratings. Version&nbsp;1.0.7, updated 7&nbsp;October&nbsp;2026.</p>
+          <p class="links">
+            <a href="#tidyshelf">Learn more<span class="sr-only"> about TidyShelf</span></a>
+            <a href="https://chromewebstore.google.com/detail/gonfhagnfhpgojiffekkpopdhafenoop">Add to Chrome</a>
+          </p>
+        </div>
+        <figure class="preview popup">
+          <button class="zoom" type="button" data-gallery="card-tidyshelf" aria-haspopup="dialog">
+            <img src="images/tidyshelf-popup-760.webp" width="760" height="1200" loading="lazy" decoding="async"
+                 srcset="images/tidyshelf-popup-380.webp 380w, images/tidyshelf-popup-760.webp 760w" sizes="17.5rem"
+                 alt="TidyShelf's popup: a button to save the open page, a search box, filters for all, unread and each tag, and the library grouped by day." />
+            <span class="sr-only">Open full size</span>
+          </button>
+          <figcaption><span class="caption">Save the page you are on in one click</span></figcaption>
+        </figure>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="who center" id="who">
+  <div class="shell">
+    <img class="portrait" src="images/yaroslav-tkachenko.jpg" width="480" height="480" loading="lazy" alt="Yaroslav Tkachenko in an orange jacket" />
+    <h2>Who you are buying from</h2>
+    <p>
+      I&rsquo;m Yaroslav Tkachenko. I make these apps on my own, with no
+      company and no investors behind them. I answer the support email
+      myself, usually the same day and within two business days at the
+      outside, and I keep the number of apps small enough that none of
+      them rot.
+    </p>
+    <p class="facts">
+      Shipping since March 2026. Paid apps are a one-time purchase, and your
+      files and data stay on your machine.
+    </p>
+    <p class="contact">
+      <a href="mailto:tkachenko.ya@icloud.com">tkachenko.ya@icloud.com</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </p>
+  </div>
+</section>
+
+<section class="list center" id="email">
+  <div class="shell">
+    <h2>One email when an app ships</h2>
+    <p>
+      One email per release, about four a year. Now and then, the one fact
+      that killed an idea that looked good on paper. No weekly digest.
+    </p>
+    <div class="act">
+      <a class="button" href="mailto:tkachenko.ya@icloud.com?subject=Put%20me%20on%20the%20release%20list">Put me on the list</a>
+      <p class="note">Kept by hand for now: one email from you puts you on it, and &ldquo;stop&rdquo; takes you off.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="shell">
+    <span>Yaroslav Tkachenko</span>
+    <span class="links">
+      <a href="picshift/">PicShift support</a>
+      <a href="flist/">Flist support</a>
+      <a href="tidyshelf/">TidyShelf support</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<dialog class="lightbox" aria-labelledby="lightbox-caption">
+  <button class="lightbox-close" type="button" aria-label="Close screenshot"><span aria-hidden="true">&times;</span></button>
+  <button class="lightbox-nav prev" type="button" aria-label="Previous screenshot"><span aria-hidden="true">&larr;</span></button>
+  <figure>
+    <figcaption id="lightbox-caption" aria-live="polite"><span></span><span class="lightbox-count"></span></figcaption>
+  </figure>
+  <button class="lightbox-nav next" type="button" aria-label="Next screenshot"><span aria-hidden="true">&rarr;</span></button>
+</dialog>
+
+<script>
+  // Tabs, for the apps and for each app's own views: arrows move between
+  // them, Home and End go to the first and the last, only the chosen one is
+  // in the tab order
+  function tabs(list, show) {
+    var all = Array.prototype.slice.call(list.querySelectorAll("[role=tab]"));
+    all.forEach(function (tab, index) {
+      tab.addEventListener("click", function () { show(tab); });
+      tab.addEventListener("keydown", function (event) {
+        var target = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: all.length - 1 }[event.key];
+        if (target === undefined) return;
+        // Home and End would otherwise also scroll the page
+        event.preventDefault();
+        var next = all[(target + all.length) % all.length];
+        show(next);
+        next.focus();
+      });
+    });
+    return all;
+  }
+  function choose(all, chosen, toggle) {
+    all.forEach(function (tab) {
+      var on = tab === chosen;
+      tab.setAttribute("aria-selected", on);
+      tab.tabIndex = on ? 0 : -1;
+      toggle(document.getElementById(tab.getAttribute("aria-controls")), on);
+    });
+  }
+
+  // an app's views: the new one fades in over the old
+  document.querySelectorAll(".steps").forEach(function (list) {
+    var steps = tabs(list, function (step) {
+      choose(steps, step, function (panel, on) {
+        panel.classList.toggle("on", on);
+        panel.inert = !on;
+      });
+    });
+  });
+
+  // the apps: the row slides along and the app's own part turns over
+  var row = document.querySelector(".apps");
+  var pages = document.querySelector(".slides");
+  var calm = matchMedia("(prefers-reduced-motion: reduce)");
+  var current = 0;
+  var turn = null;
+  var apps = tabs(row, function (tab) { show(apps.indexOf(tab), true); });
+  // the cards under the apps are the two that are not on top
+  var cards = Array.prototype.slice.call(document.querySelectorAll(".tile[data-app]"));
+  function others(id) { cards.forEach(function (card) { card.hidden = card.dataset.app === id; }); }
+  function page(index) { return document.getElementById(apps[index].getAttribute("aria-controls")); }
+  // every app stands one slot from the chosen one, the row closing on itself:
+  // after the last app comes the first again
+  function place(moving, flip) {
+    var slot = apps[0].offsetWidth;
+    apps.forEach(function (tab, i) {
+      var x = (i - current + apps.length + 1) % apps.length - 1;
+      var was = +tab.style.getPropertyValue("--x");
+      var round = moving && Math.abs(x - was) > 1;
+      // the app that changes ends goes round the back, out past one edge of
+      // the row and in at the other, not across the chosen one
+      if (round) tab.style.transition = "none";
+      tab.style.setProperty("--x", x);
+      if (!round) return;
+      getComputedStyle(tab).transform;
+      tab.style.transition = "";
+      tab.animate([
+        { transform: "translateX(" + was * slot + "px)" },
+        { transform: "translateX(" + (was - flip) * slot + "px)", opacity: 0, offset: .45 },
+        { transform: "translateX(" + (x + flip) * slot + "px)", opacity: 0, offset: .55 },
+        { transform: "translateX(" + x * slot + "px)" }
+      ], { duration: 550, easing: "ease-in-out" });
+    });
+  }
+  // a page turn under way ends at once, at its end: the page that left is
+  // hidden and nothing is left moving, so the next turn starts from rest
+  function endTurn() {
+    if (!turn) return;
+    var ended = turn;
+    turn = null;
+    ended.from.hidden = true;
+    ended.from.inert = false;
+    ended.from.classList.remove("leaving");
+    ended.moves.forEach(function (move) { move.cancel(); });
+    pages.classList.remove("turning");
+  }
+  function show(index, animate) {
+    index = (index + apps.length) % apps.length;
+    if (index === current) return;
+    // the way round the row is the short one: one slot, left or right
+    var flip = (index - current + apps.length) % apps.length === 1 ? 1 : -1;
+    var moving = animate && !calm.matches;
+    endTurn();
+    var from = page(current), to = page(index);
+    current = index;
+    // the page that leaves stays on show until it has gone, lifted out of
+    // the flow before the new one appears: were the two ever one under the
+    // other, even for one layout, an address naming the app would scroll
+    // the window down to where the new one stood
+    if (moving) {
+      from.classList.add("leaving");
+      from.inert = true;
+      pages.classList.add("turning");
+    }
+    choose(apps, apps[index], function (panel, on) { panel.hidden = !on && !(moving && panel === from); });
+    place(moving, flip);
+    if (moving) {
+      var timing = { duration: 500, easing: "cubic-bezier(.25,.8,.25,1)", fill: "forwards" };
+      var started = turn = { from: from, moves: [
+        from.animate([{ transform: "none" }, { transform: "translateX(" + -flip * 100 + "%)" }], timing),
+        to.animate([{ transform: "translateX(" + flip * 100 + "%)" }, { transform: "none" }], timing)
+      ] };
+      started.moves[1].onfinish = function () { if (turn === started) endTurn(); };
+    }
+    var id = apps[index].getAttribute("aria-controls");
+    others(id);
+    // the address names the app on show, so a reload or a shared link opens it
+    history.replaceState(null, "", index ? "#" + id : location.pathname + location.search);
+  }
+  function fromAddress(animate) {
+    // Links and bookmarks made while the app was called FGH still open its slide.
+    if (location.hash === "#fgh") history.replaceState(null, "", "#flist");
+    var index = apps.findIndex(function (tab) {
+      return location.hash === "#" + tab.getAttribute("aria-controls");
+    });
+    if (index < 0) return false;
+    show(index, animate);
+    return true;
+  }
+  // an address that opens on another app shows it from the first paint, without the slide
+  row.classList.add("still");
+  fromAddress(false);
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () { row.classList.remove("still"); });
+  });
+  // a link to an app, from a card below or anywhere, turns to it and goes up
+  // to it: the browser cannot scroll there itself, as the app was hidden
+  addEventListener("hashchange", function () {
+    if (fromAddress(true)) document.getElementById("apps").scrollIntoView();
+  });
+
+  // on a touch screen a sideways swipe across an app turns to the next one,
+  // as the row would turn under a finger
+  var hero = document.querySelector(".hero");
+  var touch = null;
+  hero.addEventListener("touchstart", function (event) {
+    touch = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+  }, { passive: true });
+  hero.addEventListener("touchend", function (event) {
+    if (!touch) return;
+    var dx = event.changedTouches[0].clientX - touch.x;
+    var dy = event.changedTouches[0].clientY - touch.y;
+    touch = null;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > 2 * Math.abs(dy)) show(current + (dx < 0 ? 1 : -1), true);
+  }, { passive: true });
+
+  // the other apps' screenshots load once the page has, so turning to one
+  // never shows an empty frame
+  addEventListener("load", function () {
+    document.querySelectorAll(".slide img[loading=lazy]").forEach(function (image) { image.loading = "eager"; });
+  });
+
+  var lightbox = document.querySelector(".lightbox");
+  // made here, not in the markup, where an img must already have a src
+  var lightboxImage = document.createElement("img");
+  lightboxImage.alt = "";
+  lightbox.querySelector("figure").prepend(lightboxImage);
+  var lightboxCaption = lightbox.querySelector("figcaption span");
+  var lightboxCount = lightbox.querySelector(".lightbox-count");
+  var lightboxClose = lightbox.querySelector(".lightbox-close");
+  var lightboxPrevious = lightbox.querySelector(".lightbox-nav.prev");
+  var lightboxNext = lightbox.querySelector(".lightbox-nav.next");
+  var galleries = {};
+  var activeGallery, activeIndex, opener;
+
+  document.querySelectorAll(".zoom").forEach(function (trigger) {
+    var name = trigger.dataset.gallery;
+    (galleries[name] = galleries[name] || []).push(trigger);
+    trigger.addEventListener("click", function () {
+      opener = trigger;
+      activeGallery = name;
+      activeIndex = galleries[name].indexOf(trigger);
+      showScreenshot();
+      lightbox.showModal();
+      lightboxClose.focus();
+    });
+  });
+  function showScreenshot() {
+    var screenshots = galleries[activeGallery];
+    var image = screenshots[activeIndex].querySelector("img");
+    var caption = screenshots[activeIndex].closest("figure").querySelector(".caption");
+    lightboxImage.src = image.currentSrc || image.src;
+    lightboxImage.alt = image.alt;
+    lightboxCaption.textContent = caption ? caption.textContent : "";
+    lightboxCount.textContent = screenshots.length > 1 ? (activeIndex + 1) + " / " + screenshots.length : "";
+    lightboxPrevious.hidden = lightboxNext.hidden = screenshots.length < 2;
+  }
+  function moveScreenshot(direction) {
+    var n = galleries[activeGallery].length;
+    activeIndex = (activeIndex + direction + n) % n;
+    showScreenshot();
+  }
+  lightboxClose.addEventListener("click", function () { lightbox.close(); });
+  lightboxPrevious.addEventListener("click", function () { moveScreenshot(-1); });
+  lightboxNext.addEventListener("click", function () { moveScreenshot(1); });
+  lightbox.addEventListener("click", function (event) { if (event.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowLeft" && !lightboxPrevious.hidden) moveScreenshot(-1);
+    if (event.key === "ArrowRight" && !lightboxNext.hidden) moveScreenshot(1);
+  });
+  // back to the screenshot that opened it, not the top of the page
+  lightbox.addEventListener("close", function () {
+    lightboxImage.removeAttribute("src");
+    if (opener) opener.focus();
+  });
+</script>
+</body>
+</html>
