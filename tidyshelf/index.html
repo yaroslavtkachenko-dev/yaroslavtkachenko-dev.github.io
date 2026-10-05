@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>TidyShelf support and privacy - Yaroslav Tkachenko</title>
+<meta name="description" content="Support and privacy policy for TidyShelf, a read-later extension for Chrome.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="../images/icon-tidyshelf.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://yaroslavtkachenko-dev.github.io/tidyshelf/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yaroslavtkachenko-dev.github.io/tidyshelf/">
+<meta property="og:title" content="TidyShelf support and privacy">
+<meta property="og:description" content="Get help with TidyShelf, a read-later extension for Chrome, and read its privacy policy: TidyShelf does not collect any data.">
+<meta property="og:image" content="https://yaroslavtkachenko-dev.github.io/images/icon-tidyshelf.png">
+<meta property="og:image:width" content="160">
+<meta property="og:image:height" content="160">
+<meta property="og:image:alt" content="The TidyShelf icon">
+<meta name="twitter:card" content="summary">
+<style>
+  /* Tokens and type are the hub's, copied: there is no build step to share
+     them. Change one there, change it here and in the other support page. */
+  :root{
+    --ground:#FFFFFF;--band:#F5F5F7;--rule:#D2D2D7;--text:#1D1D1F;--muted:#6E6E73;
+    --action:#0071E3;--link:#0066CC;
+    --sans:system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --gut:clamp(1.25rem,5vw,4rem);
+    color-scheme:light;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{
+    margin:0;background:var(--ground);color:var(--text);
+    font:17px/1.6 var(--sans);letter-spacing:-.022em;
+    -webkit-font-smoothing:antialiased;text-wrap:pretty;
+  }
+  img{display:block;max-width:100%;height:auto}
+  h1,h2,h3{text-wrap:balance}
+  a{color:var(--link);text-decoration:none;transition:color .15s ease}
+  a:hover{text-decoration:underline;text-underline-offset:.2em}
+  :focus-visible{outline:2px solid var(--action);outline-offset:3px}
+  ::selection{background:rgba(0,113,227,.18)}
+  .shell{max-width:76rem;margin:0 auto;padding-inline:var(--gut)}
+  .skip{position:absolute;left:-999px}
+  .skip:focus{left:1rem;top:1rem;z-index:20;background:var(--text);color:#fff;padding:.5rem .9rem;border-radius:6px}
+  .bar,.jump,.claim .sub,.stamp,footer{font-size:.875rem;letter-spacing:-.016em}
+
+  /* ---------- bar ---------- */
+  .bar{
+    position:sticky;top:0;z-index:10;
+    background:rgba(255,255,255,.8);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.08);
+  }
+  .bar .shell{display:flex;align-items:center;gap:1.5rem;min-height:3.25rem}
+  .name{font-weight:600;color:var(--text)}
+  .bar nav{margin-left:auto;display:flex;gap:1.5rem}
+  .bar nav a{color:var(--muted)}
+  .bar a:hover{color:var(--text);text-decoration:none}
+  /* a finger-sized hit area: padded out and pulled back by the same amount, so nothing moves */
+  .bar a,footer a,.jump a,a.mailto{display:inline-block;padding-block:.7rem;margin-block:-.7rem}
+  /* keep linked headings clear of the bar */
+  section[id]{scroll-margin-top:4.5rem}
+
+  /* ---------- head ---------- */
+  .head{padding-block:clamp(2.5rem,7vw,4.5rem) 0}
+  .doc{max-width:44rem}
+  /* the app's own icon and name first: a page opened from its Help menu says
+     whose it is before anything else. Apple's margin inside the icon is
+     pulled back, as on the hub */
+  .ident{display:flex;align-items:center;gap:1rem}
+  .ident img{width:3.25rem;margin:-.325rem;flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.14))}
+  h1{margin:0;font-size:clamp(1.75rem,3.4vw,2.5rem);font-weight:600;letter-spacing:0;line-height:1.15}
+  .doc .head p{margin:1.25rem 0 0}
+  .doc .head .jump{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.5rem}
+
+  /* ---------- document ---------- */
+  main{padding-block:0 clamp(3.5rem,8vw,5.5rem)}
+  .body{margin-top:clamp(2.5rem,6vw,3.5rem);padding-top:clamp(2.5rem,6vw,3.5rem);border-top:1px solid var(--rule)}
+  .doc section + section{
+    margin-top:clamp(2.75rem,7vw,4rem);padding-top:clamp(2.75rem,7vw,4rem);
+    border-top:1px solid var(--rule);
+  }
+  .doc h2{margin:0 0 1rem;font-size:1.75rem;font-weight:600;letter-spacing:0;line-height:1.2}
+  .doc h3{margin:2rem 0 .6rem;font-size:1.0625rem;font-weight:600}
+  .doc p{margin:0 0 1rem}
+  .doc p:last-child{margin-bottom:0}
+  .doc ul{margin:0 0 1rem;padding-inline-start:1.15rem}
+  .doc li{margin-bottom:.45rem;padding-left:.2rem}
+  .doc li::marker{color:var(--muted)}
+  .doc strong{color:var(--text);font-weight:600}
+  code{font-family:var(--mono);font-size:.875em;letter-spacing:0;color:var(--text)}
+
+  .claim{background:var(--band);border-radius:18px;padding:clamp(1.25rem,4vw,1.75rem);margin-bottom:1.5rem}
+  .doc .claim p{margin:0;color:var(--text);font-size:1.25rem;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+  .doc .claim .sub{margin-top:.5rem;color:var(--muted);font-size:.875rem;font-weight:400;letter-spacing:-.016em}
+  /* the address as text, not a button: without Mail set up, selecting and
+     copying it is how people write */
+  .doc p a.mailto{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+  .doc .stamp{margin-top:clamp(2.5rem,6vw,3.5rem);padding-top:1.25rem;border-top:1px solid var(--rule);color:var(--muted)}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--band);color:var(--muted)}
+  footer .shell{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;padding-block:1.5rem 2.5rem}
+  footer .links{margin-left:auto;display:flex;flex-wrap:wrap;gap:.75rem 1.5rem}
+  footer a{color:var(--muted)}
+  footer a:hover{color:var(--text)}
+
+  @media (max-width:40rem){
+    .bar nav a:not(.keep){display:none}
+    footer .links{margin-left:0;width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <div class="shell">
+    <a class="name" href="../">Yaroslav Tkachenko</a>
+    <nav>
+      <a href="../#tidyshelf">TidyShelf</a>
+      <a href="../#who">About</a>
+      <a class="keep" href="../#email">Release emails</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="shell"><div class="doc">
+
+    <div class="head">
+      <div class="ident">
+        <img src="../images/icon-tidyshelf.png" width="160" height="160" alt="" />
+        <h1>TidyShelf support &amp;&nbsp;privacy</h1>
+      </div>
+      <p>
+        TidyShelf is a read-later extension for Chrome. It saves articles to read
+        later in a clean reader, and keeps everything in your browser on your own
+        device.
+      </p>
+      <p class="jump">
+        <a href="#support">Get help</a>
+        <a href="#privacy">Privacy policy</a>
+      </p>
+    </div>
+
+    <div class="body">
+    <section id="support">
+      <h2>Get help</h2>
+      <p>
+        If something does not work the way you expected, write to me directly.
+        One person answers this address, usually the same day and within
+        two business days at the outside.
+      </p>
+      <p>
+        <a class="mailto" href="mailto:tkachenko.ya@icloud.com?subject=TidyShelf">tkachenko.ya@icloud.com</a>
+      </p>
+      <h3>What to include</h3>
+      <ul>
+        <li>Your Chrome version, from <code>chrome://settings/help</code></li>
+        <li>The TidyShelf version, from <code>chrome://extensions</code></li>
+        <li>What you expected to happen, and what happened instead</li>
+        <li>
+          If one article saved badly, the address of that page (only if
+          you are happy to share it, since it says what you were reading)
+        </li>
+      </ul>
+      <h3>Two things worth checking first</h3>
+      <ul>
+        <li>
+          If the save shortcut does nothing, another extension may already be
+          using it. Choose a key for TidyShelf at
+          <code>chrome://extensions/shortcuts</code>.
+        </li>
+        <li>
+          The text of a saved article is kept for offline reading, but its
+          pictures still load from the original website, so they need an
+          internet connection.
+        </li>
+      </ul>
+    </section>
+
+    <section id="privacy">
+      <h2>Privacy policy</h2>
+
+      <div class="claim">
+        <p>TidyShelf does not collect any data.</p>
+        <p class="sub">No account, no server, no analytics, no ads.</p>
+      </div>
+
+      <p>
+        There is no TidyShelf server. Everything you save is kept in your
+        browser on this device, and none of it is ever sent to me or sold to
+        anyone. The detail below is only there to say precisely what that means.
+      </p>
+
+      <h3>What is stored, and where</h3>
+      <p>
+        All of this is kept in the extension&rsquo;s storage in your Chrome
+        profile on this device:
+      </p>
+      <ul>
+        <li>Saved articles: the title, address, site name, a short excerpt, the date you saved it, whether you have read it, and your tags.</li>
+        <li>For articles saved with version&nbsp;1.0.7 or later: the number of words, used to show the reading time.</li>
+        <li>For offline reading, when &ldquo;Save full text&rdquo; is on: the article&rsquo;s text and a cleaned HTML copy of it.</li>
+        <li>Your highlights, and how far you have scrolled in each article.</li>
+        <li>Your settings: dark mode, the unread count on the toolbar icon, reader font size, the tag window, auto-mark as read, save full text, and the sort order of your list.</li>
+        <li>Whether you have answered the one-time request to leave a review.</li>
+      </ul>
+
+      <h3>Permissions, and why</h3>
+      <ul>
+        <li>
+          <strong>Read and change all your data on all websites.</strong> A small script
+          is present on each page, but it reads the article only when you save
+          it: by clicking the TidyShelf button, pressing the save
+          shortcut, or choosing &ldquo;Save page to TidyShelf&rdquo; from the
+          right-click menu. Nothing is read at any other time.
+        </li>
+        <li><strong>tabs</strong>: to get the title and address of the tab you are saving.</li>
+        <li><strong>activeTab and scripting</strong>: when you save a page that was open before TidyShelf was installed or updated, to load the article reader into that tab.</li>
+        <li><strong>contextMenus</strong> (from version&nbsp;1.0.7): to add &ldquo;Save page to TidyShelf&rdquo; to the menu that opens when you right-click a page.</li>
+        <li><strong>storage and unlimitedStorage</strong>: to keep your library on your device without the default size limit.</li>
+        <li><strong>notifications</strong>: to confirm a save made with the keyboard shortcut or the right-click menu, or to say why it failed.</li>
+        <li><strong>favicon</strong>: to show website icons in your list, using Chrome&rsquo;s built-in icon service.</li>
+      </ul>
+
+      <h3>The network</h3>
+      <p>
+        TidyShelf&rsquo;s own code makes no network requests, and its fonts are
+        bundled with the extension. Three things are worth knowing:
+      </p>
+      <ul>
+        <li>When you open a saved article, its pictures load from the original website, the same way they would if you visited it. That website can see your IP address and when the picture was requested.</li>
+        <li>Links open websites in a new tab: &ldquo;Open original&rdquo;, this policy, and &ldquo;Write a review&rdquo;, which opens TidyShelf&rsquo;s page in the Chrome Web Store.</li>
+        <li>The welcome page shown after installation is part of the extension and loads nothing from the internet.</li>
+      </ul>
+
+      <h3>Export, import and deletion</h3>
+      <ul>
+        <li>Export creates a JSON file on your device. Import reads a file you choose. Neither is sent anywhere.</li>
+        <li>From version&nbsp;1.0.7, deleting an article also removes its text, HTML copy, highlights and reading position: once the few seconds in which you can undo have passed (or, if you close the TidyShelf window sooner, the next time the browser starts or TidyShelf is updated).</li>
+        <li>Settings &rarr; &ldquo;Clear all data&rdquo; removes everything TidyShelf has stored. Uninstalling the extension removes it too.</li>
+      </ul>
+
+      <h3>Children</h3>
+      <p>
+        TidyShelf collects nothing from anyone, of any age.
+      </p>
+
+      <h3>Changes to this policy</h3>
+      <p>
+        If this ever changes, the date below changes with it, and the new
+        version is posted at this address. Questions about it go to the same
+        address as support.
+      </p>
+    </section>
+
+    <p class="stamp">Last updated 6&nbsp;October&nbsp;2026, for TidyShelf&nbsp;1.0.6 and&nbsp;1.0.7.</p>
+    </div>
+
+  </div></div>
+</main>
+
+<footer>
+  <div class="shell">
+    <span>Yaroslav Tkachenko</span>
+    <span class="links">
+      <a href="../">All apps</a>
+      <a href="../picshift/">PicShift support</a>
+      <a href="../fgh/">FGH support</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

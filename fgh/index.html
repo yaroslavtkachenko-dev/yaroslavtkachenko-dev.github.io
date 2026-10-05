@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>FGH support and privacy - Yaroslav Tkachenko</title>
+<meta name="description" content="Support, privacy policy and terms for FGH, a Mac menu bar app that cleans the text you copy. FGH does not collect any data.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://yaroslavtkachenko-dev.github.io/fgh/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yaroslavtkachenko-dev.github.io/fgh/">
+<meta property="og:title" content="FGH support and privacy">
+<meta property="og:description" content="Get help with FGH, a Mac menu bar app that cleans the text you copy, and read its privacy policy: FGH does not collect any data.">
+<meta property="og:image" content="https://yaroslavtkachenko-dev.github.io/images/icon-fgh.png">
+<meta property="og:image:width" content="160">
+<meta property="og:image:height" content="160">
+<meta property="og:image:alt" content="The FGH app icon">
+<meta name="twitter:card" content="summary">
+<style>
+  /* Tokens and type are the hub's, copied: there is no build step to share
+     them. Change one there, change it here and in the other support page. */
+  :root{
+    --ground:#FFFFFF;--band:#F5F5F7;--rule:#D2D2D7;--text:#1D1D1F;--muted:#6E6E73;
+    --action:#0071E3;--link:#0066CC;
+    --sans:system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --gut:clamp(1.25rem,5vw,4rem);
+    color-scheme:light;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{
+    margin:0;background:var(--ground);color:var(--text);
+    font:17px/1.6 var(--sans);letter-spacing:-.022em;
+    -webkit-font-smoothing:antialiased;text-wrap:pretty;
+  }
+  img{display:block;max-width:100%;height:auto}
+  h1,h2,h3{text-wrap:balance}
+  a{color:var(--link);text-decoration:none;transition:color .15s ease}
+  a:hover{text-decoration:underline;text-underline-offset:.2em}
+  :focus-visible{outline:2px solid var(--action);outline-offset:3px}
+  ::selection{background:rgba(0,113,227,.18)}
+  .shell{max-width:76rem;margin:0 auto;padding-inline:var(--gut)}
+  .skip{position:absolute;left:-999px}
+  .skip:focus{left:1rem;top:1rem;z-index:20;background:var(--text);color:#fff;padding:.5rem .9rem;border-radius:6px}
+  .bar,.jump,.claim .sub,.stamp,footer{font-size:.875rem;letter-spacing:-.016em}
+
+  /* ---------- bar ---------- */
+  .bar{
+    position:sticky;top:0;z-index:10;
+    background:rgba(255,255,255,.8);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.08);
+  }
+  .bar .shell{display:flex;align-items:center;gap:1.5rem;min-height:3.25rem}
+  .name{font-weight:600;color:var(--text)}
+  .bar nav{margin-left:auto;display:flex;gap:1.5rem}
+  .bar nav a{color:var(--muted)}
+  .bar a:hover{color:var(--text);text-decoration:none}
+  /* a finger-sized hit area: padded out and pulled back by the same amount, so nothing moves */
+  .bar a,footer a,.jump a,a.mailto{display:inline-block;padding-block:.7rem;margin-block:-.7rem}
+  /* the app's settings open #privacy and #terms: keep headings clear of the bar */
+  section[id]{scroll-margin-top:4.5rem}
+
+  /* ---------- head ---------- */
+  .head{padding-block:clamp(2.5rem,7vw,4.5rem) 0}
+  .doc{max-width:44rem}
+  /* the app's own icon and name first: a page opened from its Help menu says
+     whose it is before anything else. Apple's margin inside the icon is
+     pulled back, as on the hub */
+  .ident{display:flex;align-items:center;gap:1rem}
+  .ident img{width:3.25rem;margin:-.325rem;flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.14))}
+  h1{margin:0;font-size:clamp(1.75rem,3.4vw,2.5rem);font-weight:600;letter-spacing:0;line-height:1.15}
+  .doc .head p{margin:1.25rem 0 0}
+  .doc .head .jump{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.5rem}
+
+  /* ---------- document ---------- */
+  main{padding-block:0 clamp(3.5rem,8vw,5.5rem)}
+  .body{margin-top:clamp(2.5rem,6vw,3.5rem);padding-top:clamp(2.5rem,6vw,3.5rem);border-top:1px solid var(--rule)}
+  .doc section + section{
+    margin-top:clamp(2.75rem,7vw,4rem);padding-top:clamp(2.75rem,7vw,4rem);
+    border-top:1px solid var(--rule);
+  }
+  .doc h2{margin:0 0 1rem;font-size:1.75rem;font-weight:600;letter-spacing:0;line-height:1.2}
+  .doc h3{margin:2rem 0 .6rem;font-size:1.0625rem;font-weight:600}
+  .doc p{margin:0 0 1rem}
+  .doc p:last-child{margin-bottom:0}
+  .doc ul{margin:0 0 1rem;padding-inline-start:1.15rem}
+  .doc li{margin-bottom:.45rem;padding-left:.2rem}
+  .doc li::marker{color:var(--muted)}
+  .doc strong{color:var(--text);font-weight:600}
+  code{font-family:var(--mono);font-size:.875em;letter-spacing:0;color:var(--text)}
+
+  .claim{background:var(--band);border-radius:18px;padding:clamp(1.25rem,4vw,1.75rem);margin-bottom:1.5rem}
+  .doc .claim p{margin:0;color:var(--text);font-size:1.25rem;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+  .doc .claim .sub{margin-top:.5rem;color:var(--muted);font-size:.875rem;font-weight:400;letter-spacing:-.016em}
+  /* the address as text, not a button: without Mail set up, selecting and
+     copying it is how people write */
+  .doc p a.mailto{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+  .doc .stamp{margin-top:clamp(2.5rem,6vw,3.5rem);padding-top:1.25rem;border-top:1px solid var(--rule);color:var(--muted)}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--band);color:var(--muted)}
+  footer .shell{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;padding-block:1.5rem 2.5rem}
+  footer .links{margin-left:auto;display:flex;flex-wrap:wrap;gap:.75rem 1.5rem}
+  footer a{color:var(--muted)}
+  footer a:hover{color:var(--text)}
+
+  @media (max-width:40rem){
+    .bar nav a:not(.keep){display:none}
+    footer .links{margin-left:0;width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <div class="shell">
+    <a class="name" href="../">Yaroslav Tkachenko</a>
+    <nav>
+      <a href="../#fgh">FGH</a>
+      <a href="../#who">About</a>
+      <a class="keep" href="../#email">Release emails</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="shell"><div class="doc">
+
+    <div class="head">
+      <div class="ident">
+        <img src="../images/icon-fgh.png" width="160" height="160" alt="" />
+        <h1>FGH support &amp;&nbsp;privacy</h1>
+      </div>
+      <p>
+        FGH is a menu bar app for Mac that cleans the text you copy: formatting,
+        tracking parameters and the invisible characters some AI tools leave
+        behind. Everything happens on your own Mac. FGH is in development and
+        not on sale yet.
+      </p>
+      <p class="jump">
+        <a href="#support">Get help</a>
+        <a href="#privacy">Privacy policy</a>
+        <a href="#terms">Terms of Service</a>
+      </p>
+    </div>
+
+    <div class="body">
+    <section id="support">
+      <h2>Get help</h2>
+      <p>
+        If something does not work the way you expected, write to me directly.
+        One person answers this address, usually the same day and within
+        two business days at the outside.
+      </p>
+      <p>
+        <a class="mailto" href="mailto:tkachenko.ya@icloud.com?subject=FGH%20Support">tkachenko.ya@icloud.com</a>
+      </p>
+      <h3>What to include</h3>
+      <ul>
+        <li>Your macOS version, and the FGH version (right-click the FGH icon in the menu bar and choose About FGH)</li>
+        <li>Which app you copied from, and which app you pasted into</li>
+        <li>What you expected to happen, and what happened instead</li>
+      </ul>
+      <p>
+        Please never send a password or anything private you copied. Describe
+        the text instead, for example &ldquo;a link from a newsletter&rdquo;,
+        and I will ask if a sample is genuinely needed.
+      </p>
+    </section>
+
+    <section id="privacy">
+      <h2>Privacy policy</h2>
+
+      <div class="claim">
+        <p>FGH does not collect any data.</p>
+        <p class="sub">No analytics, no tracking, no accounts, no network calls.</p>
+      </div>
+
+      <p>
+        That is the entire policy. The detail below is only there to say
+        precisely what it means.
+      </p>
+
+      <h3>What FGH reads</h3>
+      <ul>
+        <li>The text you copy, at the moment you copy it, so that it can be cleaned. This happens in memory, on your Mac.</li>
+        <li>FGH leaves alone anything that apps mark as concealed, transient or auto-generated, the convention password managers use, and anything copied from 1Password, Bitwarden, LastPass, Dashlane, KeePassXC, Proton Pass, NordPass, RoboForm or Enpass.</li>
+        <li>Images and files are ignored.</li>
+      </ul>
+
+      <h3>Clipboard history</h3>
+      <p>
+        History is off until you turn it on. When it is on, FGH keeps up to the
+        last 100 text items and deletes each one after 72 hours. The history is
+        encrypted with AES-256-GCM and stored in your Mac&rsquo;s Keychain. The
+        key is created on your Mac and never leaves it.
+      </p>
+
+      <h3>Permissions</h3>
+      <ul>
+        <li><strong>Accessibility</strong>, only if you grant it: it lets &#8997;&#8984;1&ndash;9 paste a history item straight into the app you are using. Without it, FGH puts the item on the clipboard and you paste it yourself.</li>
+        <li><strong>Launch at Login</strong>, only if you turn it on in Settings.</li>
+      </ul>
+      <p>
+        FGH runs in Apple&rsquo;s app sandbox and asks for nothing else.
+      </p>
+
+      <h3>The network</h3>
+      <p>
+        The app contains no networking code at all, and the sandbox gives it no
+        network access. It does not phone home, does not check for updates on
+        its own, and has no analytics, crash-reporting or other third-party
+        service embedded in it.
+      </p>
+
+      <h3>What is stored on your Mac</h3>
+      <ul>
+        <li>Your settings, such as which cleaning options are on and whether history is on.</li>
+        <li>The clipboard history and its encryption key, in the Keychain, only while history is on.</li>
+      </ul>
+      <p>
+        None of it is sent anywhere, and none of it identifies you.
+      </p>
+
+      <h3>Deleting your data</h3>
+      <p>
+        <strong>Settings &rarr; Delete all data</strong> removes the clipboard
+        history, its encryption key and all your settings at once. Moving the
+        app to the Trash does not clear the Keychain, so use Delete all data first
+        if you want nothing left behind.
+      </p>
+
+      <h3>Children</h3>
+      <p>
+        FGH collects nothing from anyone, of any age.
+      </p>
+
+      <h3>Changes to this policy</h3>
+      <p>
+        If this ever changes, the date below changes with it, and the change is
+        described in the release notes of the version that introduces it.
+      </p>
+    </section>
+
+    <section id="terms">
+      <h2>Terms of Service</h2>
+      <p>
+        By downloading, installing or using FGH (&ldquo;the App&rdquo;), you
+        agree to these terms. If you do not agree, do not use the App.
+      </p>
+
+      <h3>1. What the App does</h3>
+      <p>
+        FGH is a macOS utility that cleans the text you copy and, if you turn it
+        on, keeps a clipboard history. It runs entirely on your own Mac.
+      </p>
+
+      <h3>2. License</h3>
+      <p>
+        You get a limited, non-exclusive, non-transferable license to use the
+        App on any Mac you own or control. If you got the App from the Mac App
+        Store, Apple&rsquo;s terms for apps bought there apply as well.
+      </p>
+
+      <h3>3. What you may not do</h3>
+      <ul>
+        <li>Reverse engineer, decompile or disassemble the App</li>
+        <li>Modify or adapt the App, or create derivative works from it</li>
+        <li>Distribute, sublicense, lease or lend the App to anyone else</li>
+        <li>Use the App for anything unlawful</li>
+      </ul>
+
+      <h3>4. Clipboard access</h3>
+      <p>
+        To do its job, the App reads the text you copy, changes it to remove
+        formatting, tracking parameters and invisible characters, and, if you
+        turn history on, stores it as described in the privacy policy above. It
+        skips content that password managers mark as sensitive.
+      </p>
+
+      <h3>5. Your data</h3>
+      <p>
+        Everything the App processes stays on your Mac. Nothing is sent to any
+        server. The privacy policy above has the details.
+      </p>
+
+      <h3>6. No warranty</h3>
+      <p>
+        The App is provided &ldquo;as is&rdquo;, without warranties of any kind,
+        express or implied. I do not promise that it will be free of errors or
+        run without interruption, that every defect will be fixed, or that it
+        will meet your particular needs.
+      </p>
+
+      <h3>7. Limitation of liability</h3>
+      <p>
+        To the extent the law allows, I am not liable for indirect, incidental,
+        special, consequential or punitive damages, including loss of data,
+        arising from your use of the App.
+      </p>
+
+      <h3>8. Clipboard risk</h3>
+      <p>
+        FGH skips content that password managers mark as sensitive, but no
+        automatic check is perfect. Using any clipboard tool carries some risk,
+        and you use the App at your own discretion.
+      </p>
+
+      <h3>9. Updates and ending</h3>
+      <p>
+        Updates are covered by these terms unless they come with their own. You
+        can stop using the App at any time by removing it, and I may stop
+        developing it at any time.
+      </p>
+
+      <h3>10. Changes to these terms</h3>
+      <p>
+        These terms may change. The date below changes with them, and using the
+        App after a change means you accept the new version.
+      </p>
+
+      <h3>11. Governing law</h3>
+      <p>
+        These terms are governed by the applicable law of the European Union.
+      </p>
+
+      <h3>12. Contact</h3>
+      <p>
+        Questions about these terms or the privacy policy:
+        <a href="mailto:tkachenko.ya@icloud.com">tkachenko.ya@icloud.com</a>.
+      </p>
+    </section>
+
+    <p class="stamp">Last updated 25&nbsp;October&nbsp;2026, for FGH&nbsp;2.6.</p>
+    </div>
+
+  </div></div>
+</main>
+
+<footer>
+  <div class="shell">
+    <span>Yaroslav Tkachenko</span>
+    <span class="links">
+      <a href="../">All apps</a>
+      <a href="../picshift/">PicShift support</a>
+      <a href="../tidyshelf/">TidyShelf support</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

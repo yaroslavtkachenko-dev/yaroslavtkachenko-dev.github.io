@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>PicShift, a batch photo converter for Mac - Yaroslav Tkachenko</title>
+<meta name="description" content="PicShift converts and resizes a folder of photos on your Mac, strips location and camera data, and tells you what the batch will weigh before it writes a file.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://yaroslavtkachenko-dev.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yaroslavtkachenko-dev.github.io/">
+<meta property="og:title" content="PicShift, a batch photo converter for Mac">
+<meta property="og:description" content="Eight photos, 14.66 MB. PicShift said about 4.33 MB. They came out at 4.09 MB.">
+<meta property="og:image" content="https://yaroslavtkachenko-dev.github.io/images/og-picshift.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="PicShift: eight photos, 14.66 MB; PicShift said about 4.33 MB; they came out at 4.09 MB.">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* Light, the way Mac software is shown: white ground, grey bands, the dark
+     PicShift window as the one object on stage. Two text greys (near-black for
+     what is read, grey for what labels or qualifies it), one blue for
+     what you can act on (the blue of PicShift's own Convert button), five
+     type sizes, the system font tracked the way Apple tracks it. */
+  :root{
+    --ground:#FFFFFF;
+    --band:#F5F5F7;
+    --rule:#D2D2D7;
+    --text:#1D1D1F;
+    --muted:#6E6E73;
+    --action:#0071E3;
+    --link:#0066CC;
+    --sans:system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --gut:clamp(1.25rem,5vw,4rem);
+    --section:clamp(4.5rem,9vw,7.5rem);
+    color-scheme:light;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  /* letter-spacing in em is fixed where it is set and inherited as a length,
+     so every size below sets its own */
+  body{
+    margin:0;background:var(--ground);color:var(--text);
+    font:17px/1.5 var(--sans);letter-spacing:-.022em;
+    -webkit-font-smoothing:antialiased;text-wrap:pretty;
+  }
+  img{display:block;max-width:100%;height:auto}
+  h1,h2,h3{text-wrap:balance}
+  section[id],article[id]{scroll-margin-top:4rem}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline;text-underline-offset:.2em}
+  a,button{transition:color .15s ease,background-color .15s ease,box-shadow .15s ease}
+  :focus-visible{outline:2px solid var(--action);outline-offset:3px}
+  ::selection{background:rgba(0,113,227,.18)}
+  .shell{max-width:76rem;margin:0 auto;padding-inline:var(--gut)}
+  .center{text-align:center}
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip{position:absolute;left:-999px}
+  .skip:focus{left:1rem;top:1rem;z-index:20;background:var(--text);color:#fff;padding:.5rem .9rem;border-radius:6px}
+
+  /* the small size: everything that labels, qualifies or navigates */
+  .bar,.steps button,.terms,.status,.facts,.note,.caption,.tile figcaption,footer,.lightbox figcaption{
+    font-size:.875rem;letter-spacing:-.016em;
+  }
+
+  /* ---------- bar ---------- */
+  .bar{
+    position:sticky;top:0;z-index:10;
+    background:rgba(255,255,255,.8);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.08);
+  }
+  .bar .shell{display:flex;align-items:center;gap:1.5rem;min-height:3.25rem}
+  .name{font-weight:600;color:var(--text)}
+  .bar nav{margin-left:auto;display:flex;gap:1.5rem}
+  .bar a{color:var(--text)}
+  .bar nav a{color:var(--muted)}
+  .bar a:hover{color:var(--text);text-decoration:none}
+  /* a finger-sized hit area: padded out and pulled back by the same amount, so nothing moves */
+  .bar a,footer a,.go,.contact a{display:inline-block;padding-block:.7rem;margin-block:-.7rem}
+  /* on a phone the bar keeps two links, the other apps under a short name */
+  .bar .short{display:none}
+
+  /* ---------- hero ---------- */
+  .hero{padding-block:clamp(3rem,7vw,5.5rem) clamp(2.5rem,5vw,3.5rem)}
+  /* Apple draws the icon's body at 824 of 1024, so the PNG's own margin is
+     the space around it; the shadow is the one Finder gives an icon */
+  .appicon{width:clamp(5.5rem,10vw,7rem);margin:0 auto;filter:drop-shadow(0 10px 22px rgba(0,0,0,.16))}
+  .product{margin:1.25rem 0 0;font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+  .kind{margin:.2rem 0 0;color:var(--muted)}
+  /* The receipt. Set on a decimal tab: whole part right-aligned in one
+     column, fraction in the next, unit in a third, so the points stand in a
+     line whatever the weight; the total is semibold. The size is whatever
+     lets it (12.1 em in SF) fit the column, up to 76 px; the spare 7% is for
+     wider system fonts. Screen readers get the sentence, not the grid. */
+  .receipt{margin:clamp(2rem,4.5vw,3rem) 0 0}
+  .ledger{
+    display:grid;grid-template-columns:1fr auto auto auto;align-items:last baseline;
+    width:fit-content;max-width:100%;margin-inline:auto;text-align:left;
+    font-size:min(4.75rem,calc((100vw - 2 * var(--gut)) / 12.9));
+    font-weight:300;line-height:1.08;letter-spacing:-.01em;color:var(--muted);
+  }
+  .ledger .int{padding-left:1.1em;text-align:right;font-variant-numeric:tabular-nums}
+  .ledger .frac{font-variant-numeric:tabular-nums}
+  .ledger .unit{padding-left:.4em;font-size:max(.42em,11px);font-weight:400;letter-spacing:.02em}
+  .ledger .rule{grid-column:1 / -1;height:1px;margin:.16em 0 .12em;background:var(--rule)}
+  .ledger .t{color:var(--text);font-weight:600}
+  .ledger .unit.t{color:var(--muted);font-weight:400}
+  .lede{
+    max-width:36rem;margin:clamp(2rem,4vw,2.75rem) auto 0;
+    font-size:clamp(1.0625rem,1.6vw,1.25rem);line-height:1.5;letter-spacing:-.01em;
+  }
+  .act{display:flex;flex-direction:column;align-items:center;gap:.9rem;margin-top:2rem}
+  .button{
+    display:inline-block;background:var(--action);color:#fff;
+    font-weight:500;padding:.75rem 1.4rem;border-radius:980px;
+  }
+  .button:hover{background:#0077ED;text-decoration:none}
+  .button:active{background:#006EDB}
+  .terms{margin:0;max-width:26rem;color:var(--muted);text-wrap:balance}
+
+  /* ---------- the window ---------- */
+  .stage{padding-bottom:var(--section)}
+  /* PicShift's own segmented control, in its light appearance */
+  .steps{
+    display:flex;width:fit-content;margin:0 auto;gap:2px;padding:2px;
+    background:rgba(118,118,128,.12);border-radius:9px;
+  }
+  .steps button{
+    font-family:inherit;font-weight:500;color:var(--text);
+    background:transparent;border:0;border-radius:7px;padding:.4rem 1.1rem;cursor:pointer;
+    position:relative;
+  }
+  /* drawn at the app's size, but the hit area reaches past it to a finger's 44 px */
+  .steps button::after{content:"";position:absolute;inset:-7px 0}
+  .steps button[aria-selected="true"]{background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04)}
+  .wins{display:grid;margin-top:2rem}
+  /* the tab panel wraps the figure: a figure with a caption cannot take a role */
+  .win{grid-area:1 / 1}
+  .win figure{margin:0}
+  /* the new state fades in on top; the old one stays whole underneath until it
+     has, so the window never dims halfway through. It is inert from the first
+     moment, so nobody can tab into it or have it read out while it lingers */
+  .win:not(.on){opacity:0;visibility:hidden;transition:opacity 0s .4s,visibility 0s .4s}
+  .win.on{z-index:1;transition:opacity .4s ease}
+  .win:not(.on) figcaption{visibility:hidden;transition:none}
+  .zoom{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in;line-height:0}
+  .zoom:focus-visible{outline-offset:6px}
+  /* a hairline, a contact shadow and a soft one, as macOS draws a window on
+     a light desktop; the 1 pt inner rim is in the image itself */
+  .win img{
+    width:100%;
+    filter:drop-shadow(0 0 .5px rgba(0,0,0,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.14)) drop-shadow(0 30px 60px rgba(0,0,0,.24));
+  }
+  .win figcaption{
+    position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:.2rem 1rem;
+    margin-top:2rem;color:var(--muted);text-align:center;
+  }
+  .win figcaption b{
+    font-size:1.25rem;font-weight:600;letter-spacing:-.01em;color:var(--text);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+
+  /* ---------- the other two ---------- */
+  h2{
+    margin:0 0 clamp(2rem,4vw,3rem);
+    font-size:clamp(1.75rem,3.4vw,2.5rem);font-weight:600;letter-spacing:0;line-height:1.15;
+  }
+  .others{background:var(--band);padding-block:var(--section)}
+  .pair{display:grid;gap:1.25rem}
+  .tile{
+    display:grid;grid-template-rows:auto 1fr;gap:2.5rem;
+    background:var(--ground);border-radius:24px;padding:clamp(2rem,4.5vw,3.25rem) clamp(1.5rem,4vw,3rem);
+    text-align:center;
+  }
+  .tile .appicon{width:4rem;filter:drop-shadow(0 6px 14px rgba(0,0,0,.14))}
+  .tile h3{margin:.9rem 0 .6rem;font-size:1.75rem;font-weight:600;letter-spacing:0;line-height:1.2}
+  .tile p{margin:0 auto .6rem;max-width:26rem}
+  .tile .status{max-width:24rem;color:var(--muted)}
+  code{font-family:var(--mono);font-size:.875em;letter-spacing:0;color:var(--text)}
+  .tile figure{margin:0;display:grid;justify-items:center;align-content:end}
+  .tile .zoom{width:auto;display:inline-block}
+  /* a fixed width, held in by img's max-width: as a percentage it would leave
+     the shrink-wrapped button 0 px wide until the image loads, and a lazy
+     image that is 0 px wide is never loaded */
+  .tile.fgh figure img{width:21rem;filter:drop-shadow(0 18px 36px rgba(0,0,0,.22))}
+  /* the popup is white on a white tile: a hairline keeps its edge */
+  .tile.tidy figure img{width:17.5rem;filter:drop-shadow(0 0 .5px rgba(0,0,0,.45)) drop-shadow(0 14px 32px rgba(0,0,0,.14))}
+  .tile figcaption{margin-top:1.25rem;color:var(--muted)}
+  /* the two tiles share rows, so both captures start on one line however
+     long either text runs */
+  @media (min-width:56rem){
+    .pair{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+    .tile{grid-row:span 2;grid-template-rows:subgrid}
+  }
+
+  /* ---------- who, list, footer ---------- */
+  .who{padding-block:var(--section)}
+  .who .shell{max-width:44rem}
+  .portrait{width:6rem;height:6rem;margin:0 auto 1.75rem;border-radius:50%;object-fit:cover}
+  .who h2,.list h2{margin-bottom:1rem}
+  .who p{margin:0}
+  .who .facts{margin-top:1rem;color:var(--muted)}
+  .who .contact{margin-top:1.25rem;display:flex;justify-content:center;gap:1.5rem}
+  .list{background:var(--band);padding-block:var(--section) calc(var(--section) * .8)}
+  .list p{margin:0 auto;max-width:34rem}
+  .list .note{max-width:26rem;color:var(--muted)}
+  footer{background:var(--band);color:var(--muted)}
+  footer .shell{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;padding-block:1.25rem 2.5rem;border-top:1px solid var(--rule)}
+  footer .links{margin-left:auto;display:flex;flex-wrap:wrap;gap:.75rem 1.5rem}
+  footer a{color:var(--muted)}
+  footer a:hover{color:var(--text)}
+
+  /* ---------- lightbox ---------- */
+  .lightbox{inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;
+    padding:clamp(1rem,3vw,2rem);background:transparent;border:0;color:var(--text);overflow:hidden}
+  .lightbox[open]{display:grid;place-items:center}
+  .lightbox::backdrop{background:rgba(245,245,247,.94);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  /* the page under an open screenshot stays where it was; the gutter is kept,
+     so where scrollbars take room the page does not jump sideways */
+  html{scrollbar-gutter:stable}
+  html:has(.lightbox[open]){overflow:hidden}
+  .lightbox figure{display:grid;justify-items:center;margin:0;max-width:100%;max-height:100%}
+  .lightbox img{max-height:calc(100dvh - 7rem);object-fit:contain;filter:drop-shadow(0 0 .5px rgba(0,0,0,.5)) drop-shadow(0 24px 48px rgba(0,0,0,.2))}
+  .lightbox figcaption{display:flex;gap:.8rem;margin:1.25rem 4rem 0;color:var(--muted);text-align:center}
+  .lightbox-count{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .lightbox-close,.lightbox-nav{
+    position:absolute;z-index:1;display:grid;place-items:center;width:2.75rem;height:2.75rem;padding:0;
+    font:inherit;font-size:1.25rem;color:var(--text);background:#fff;
+    border:1px solid var(--rule);border-radius:50%;cursor:pointer;
+  }
+  .lightbox-close{top:clamp(1rem,3vw,2rem);right:clamp(1rem,3vw,2rem)}
+  .lightbox-nav{top:50%;transform:translateY(-50%)}
+  .lightbox-nav.prev{left:clamp(.75rem,2vw,2rem)}
+  .lightbox-nav.next{right:clamp(.75rem,2vw,2rem)}
+  .lightbox-close:hover,.lightbox-nav:hover{background:var(--band)}
+
+  @media (max-width:40rem){
+    .bar nav a:not(.keep){display:none}
+    .bar .long{display:none}
+    .bar .short{display:inline}
+    /* the full width, shared out so the longest label still fits on one line */
+    .steps{width:auto}
+    .steps button{flex:1 1 auto;padding:.45rem .5rem;white-space:nowrap}
+    /* The window at a size its numbers can be read at. Fitted to a phone it
+       was a third of its real size; here its right edge, where the sidebar and
+       the sizes are, stays on screen and the rest runs off the left edge,
+       which never scrolls, so nothing has to clip it or its shadow. The whole
+       window opens on a tap */
+    .win img{width:225%;max-width:none;margin-left:-125%}
+    footer .links{margin-left:0;width:100%}
+    .lightbox figcaption{margin-inline:.5rem}
+    .lightbox-nav{top:auto;bottom:1.25rem;transform:none}
+    .lightbox-nav.prev{left:calc(50% - 3.25rem)}
+    .lightbox-nav.next{right:calc(50% - 3.25rem)}
+  }
+  /* below about 345 px the name and both links no longer fit on one line:
+     the bar steps down a size and closes up */
+  @media (max-width:22rem){
+    .bar{font-size:.8125rem}
+    .bar .shell,.bar nav{gap:1rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <div class="shell">
+    <a class="name" href="/">Yaroslav Tkachenko</a>
+    <nav>
+      <a href="#picshift">PicShift</a>
+      <a class="keep" href="#apps"><span class="long">FGH and TidyShelf</span><span class="short">Apps</span></a>
+      <a href="#who">About</a>
+      <a class="keep" href="#email">Release emails</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero center" id="picshift">
+  <div class="shell">
+    <img class="appicon" src="images/icon-picshift-256.png" width="256" height="256" alt="" />
+    <p class="product">PicShift</p>
+    <p class="kind">A batch photo converter for Mac. In final testing.</p>
+    <h1 class="receipt">
+      <span class="sr-only">Eight photos, 14.66&nbsp;MB. PicShift said about 4.33&nbsp;MB. They came out at 4.09&nbsp;MB.</span>
+      <span class="ledger" aria-hidden="true">
+        <span class="item">Eight photos</span><span class="int">14</span><span class="frac">.66</span><span class="unit">MB</span>
+        <span class="item">PicShift said about</span><span class="int">4</span><span class="frac">.33</span><span class="unit">MB</span>
+        <span class="rule"></span>
+        <span class="item t">They came out at</span><span class="int t">4</span><span class="frac t">.09</span><span class="unit t">MB</span>
+      </span>
+    </h1>
+    <p class="lede">
+      Drop in photos or a whole folder. PicShift converts and resizes them,
+      strips location and camera data, and tells you what the batch will weigh
+      before it writes a single file. Nothing is uploaded.
+    </p>
+    <div class="act">
+      <a class="button" href="#email">Email me the day it ships</a>
+      <p class="terms">
+        Free for your first 70&nbsp;photo conversions, then $9.99 once, no subscription.
+        Mac&nbsp;App&nbsp;Store, macOS&nbsp;14 or later.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="stage" aria-label="PicShift, one window in three states">
+  <div class="shell">
+    <div class="steps" role="tablist" aria-label="PicShift states">
+      <button type="button" role="tab" id="step-preview" aria-controls="state-preview" aria-selected="false" tabindex="-1">Before and after</button>
+      <button type="button" role="tab" id="step-forecast" aria-controls="state-forecast" aria-selected="true">Forecast</button>
+      <button type="button" role="tab" id="step-result" aria-controls="state-result" aria-selected="false" tabindex="-1">Result</button>
+    </div>
+    <div class="wins">
+      <div class="win" id="state-preview" role="tabpanel" aria-labelledby="step-preview" inert><figure>
+        <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog">
+          <img src="images/picshift-preview-1536.webp" width="2196" height="1522" decoding="async"
+               srcset="images/picshift-preview-768.webp 768w, images/picshift-preview-1536.webp 1536w, images/picshift-preview-2196.webp 2196w"
+               sizes="(max-width: 40rem) 225vw, (min-width: 80rem) 68rem, 92vw"
+               alt="PicShift with eight photos queued for JPEG at quality 70, longest side 1920 px, location and camera info removed. Under the list, a city skyline shows before and after side by side at actual size: 1.74 MB before, about 591 kB after." />
+          <span class="sr-only">Open full size</span>
+        </button>
+        <figcaption><b>1.74&nbsp;MB &rarr; &asymp;&thinsp;591&nbsp;kB</b> <span class="caption">One photo, before and after, at actual size</span></figcaption>
+      </figure></div>
+      <div class="win on" id="state-forecast" role="tabpanel" aria-labelledby="step-forecast"><figure>
+        <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog">
+          <img src="images/picshift-forecast-1536.webp" width="2196" height="1522" fetchpriority="high" decoding="async"
+               srcset="images/picshift-forecast-768.webp 768w, images/picshift-forecast-1536.webp 1536w, images/picshift-forecast-2196.webp 2196w"
+               sizes="(max-width: 40rem) 225vw, (min-width: 80rem) 68rem, 92vw"
+               alt="PicShift with eight photos queued for HEIC at quality 70, half size, location and camera info removed. Before converting it forecasts 14.66 MB down to about 4.33 MB, about 70% smaller." />
+          <span class="sr-only">Open full size</span>
+        </button>
+        <figcaption><b>14.66&nbsp;MB &rarr; &asymp;&thinsp;4.33&nbsp;MB</b> <span class="caption">Eight photos, forecast before a single file is written</span></figcaption>
+      </figure></div>
+      <div class="win" id="state-result" role="tabpanel" aria-labelledby="step-result" inert><figure>
+        <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog">
+          <img src="images/picshift-result-1536.webp" width="2196" height="1522" decoding="async"
+               srcset="images/picshift-result-768.webp 768w, images/picshift-result-1536.webp 1536w, images/picshift-result-2196.webp 2196w"
+               sizes="(max-width: 40rem) 225vw, (min-width: 80rem) 68rem, 92vw"
+               alt="The same batch converted: 8 of 8 files done, 14.66 MB down to 4.09 MB, 10.57 MB saved, each file checked off with its final size." />
+          <span class="sr-only">Open full size</span>
+        </button>
+        <figcaption><b>14.66&nbsp;MB &rarr; 4.09&nbsp;MB</b> <span class="caption">The real result: 10.57&nbsp;MB saved, each file checked off</span></figcaption>
+      </figure></div>
+    </div>
+  </div>
+</section>
+
+<section class="others" id="apps">
+  <div class="shell">
+    <h2 class="center">Two more apps</h2>
+    <div class="pair">
+      <article class="tile fgh" id="fgh">
+        <div class="copy">
+          <img class="appicon" src="images/icon-fgh.png" width="160" height="160" alt="" />
+          <h3>FGH</h3>
+          <p>
+            Cleans text the moment you copy it: formatting, tracking parameters
+            like <code>utm_*</code>, and the invisible characters some AI tools
+            leave behind.
+          </p>
+          <p class="status">In development. It will be a one-time purchase, on the Mac App Store and as a direct download.</p>
+          <a class="go" href="#email">Email me when FGH ships</a>
+        </div>
+        <figure>
+          <button class="zoom" type="button" data-gallery="fgh" aria-haspopup="dialog">
+            <img src="images/fgh-clipboard-history-680.webp" width="680" height="810" loading="lazy" decoding="async"
+                 srcset="images/fgh-clipboard-history-340.webp 340w, images/fgh-clipboard-history-680.webp 680w" sizes="21rem"
+                 alt="FGH clipboard history showing 19 hidden characters removed, 5 trackers stripped and quotes fixed." />
+            <span class="sr-only">Open full size</span>
+          </button>
+          <figcaption><span class="caption">Every entry says what it fixed</span></figcaption>
+        </figure>
+      </article>
+      <article class="tile tidy" id="tidyshelf">
+        <div class="copy">
+          <img class="appicon" src="images/icon-tidyshelf.png" width="160" height="160" alt="" />
+          <h3>TidyShelf</h3>
+          <p>
+            Save an article now, read it when you actually have time. Everything
+            you save stays in your browser, with no account and no sync server.
+          </p>
+          <p class="status">Free on the Chrome Web Store, rated 5.0 from 3&nbsp;ratings. Version&nbsp;1.0.7, updated 7&nbsp;October&nbsp;2026.</p>
+          <a class="go" href="https://chromewebstore.google.com/detail/gonfhagnfhpgojiffekkpopdhafenoop">Add TidyShelf to Chrome</a>
+        </div>
+        <figure>
+          <button class="zoom" type="button" data-gallery="tidyshelf" aria-haspopup="dialog">
+            <img src="images/tidyshelf-popup-760.webp" width="760" height="1200" loading="lazy" decoding="async"
+                 srcset="images/tidyshelf-popup-380.webp 380w, images/tidyshelf-popup-760.webp 760w" sizes="17.5rem"
+                 alt="TidyShelf's popup: a button to save the open page, a search box, filters for all, unread and each tag, and the library grouped by day." />
+            <span class="sr-only">Open full size</span>
+          </button>
+          <figcaption><span class="caption">Save the page you are on in one click</span></figcaption>
+        </figure>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="who center" id="who">
+  <div class="shell">
+    <img class="portrait" src="images/yaroslav-tkachenko.jpg" width="480" height="480" loading="lazy" alt="Yaroslav Tkachenko in an orange jacket" />
+    <h2>Who you are buying from</h2>
+    <p>
+      I&rsquo;m Yaroslav Tkachenko. I make these apps on my own, with no
+      company and no investors behind them. I answer the support email
+      myself, usually the same day and within two business days at the
+      outside, and I keep the number of apps small enough that none of
+      them rot.
+    </p>
+    <p class="facts">
+      Shipping since March 2026. Paid apps are a one-time purchase, and your
+      files and data stay on your machine.
+    </p>
+    <p class="contact">
+      <a href="mailto:tkachenko.ya@icloud.com">tkachenko.ya@icloud.com</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </p>
+  </div>
+</section>
+
+<section class="list center" id="email">
+  <div class="shell">
+    <h2>One email when an app ships</h2>
+    <p>
+      One email per release, about four a year. Now and then, the one fact
+      that killed an idea that looked good on paper. No weekly digest.
+    </p>
+    <div class="act">
+      <a class="button" href="mailto:tkachenko.ya@icloud.com?subject=Put%20me%20on%20the%20release%20list">Put me on the list</a>
+      <p class="note">Kept by hand for now: one email from you puts you on it, and &ldquo;stop&rdquo; takes you off.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="shell">
+    <span>Yaroslav Tkachenko</span>
+    <span class="links">
+      <a href="picshift/">PicShift support</a>
+      <a href="fgh/">FGH support</a>
+      <a href="tidyshelf/">TidyShelf support</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<dialog class="lightbox" aria-labelledby="lightbox-caption">
+  <button class="lightbox-close" type="button" aria-label="Close screenshot"><span aria-hidden="true">&times;</span></button>
+  <button class="lightbox-nav prev" type="button" aria-label="Previous screenshot"><span aria-hidden="true">&larr;</span></button>
+  <figure>
+    <figcaption id="lightbox-caption" aria-live="polite"><span></span><span class="lightbox-count"></span></figcaption>
+  </figure>
+  <button class="lightbox-nav next" type="button" aria-label="Next screenshot"><span aria-hidden="true">&rarr;</span></button>
+</dialog>
+
+<script>
+  // PicShift states are tabs: arrows move between them, Home and End go to the
+  // first and the last, only one is in the tab order
+  var steps = document.querySelectorAll(".steps [role=tab]");
+  function showStep(step) {
+    steps.forEach(function (other) {
+      var on = other === step;
+      other.setAttribute("aria-selected", on);
+      other.tabIndex = on ? 0 : -1;
+      var panel = document.getElementById(other.getAttribute("aria-controls"));
+      panel.classList.toggle("on", on);
+      panel.inert = !on;
+    });
+  }
+  steps.forEach(function (step, index) {
+    step.addEventListener("click", function () { showStep(step); });
+    step.addEventListener("keydown", function (event) {
+      var target = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: steps.length - 1 }[event.key];
+      if (target === undefined) return;
+      // Home and End would otherwise also scroll the page
+      event.preventDefault();
+      var next = steps[(target + steps.length) % steps.length];
+      showStep(next);
+      next.focus();
+    });
+  });
+
+  var lightbox = document.querySelector(".lightbox");
+  // made here, not in the markup, where an img must already have a src
+  var lightboxImage = document.createElement("img");
+  lightboxImage.alt = "";
+  lightbox.querySelector("figure").prepend(lightboxImage);
+  var lightboxCaption = lightbox.querySelector("figcaption span");
+  var lightboxCount = lightbox.querySelector(".lightbox-count");
+  var lightboxClose = lightbox.querySelector(".lightbox-close");
+  var lightboxPrevious = lightbox.querySelector(".lightbox-nav.prev");
+  var lightboxNext = lightbox.querySelector(".lightbox-nav.next");
+  var galleries = {};
+  var activeGallery, activeIndex, opener;
+
+  document.querySelectorAll(".zoom").forEach(function (trigger) {
+    var name = trigger.dataset.gallery;
+    (galleries[name] = galleries[name] || []).push(trigger);
+    trigger.addEventListener("click", function () {
+      opener = trigger;
+      activeGallery = name;
+      activeIndex = galleries[name].indexOf(trigger);
+      showScreenshot();
+      lightbox.showModal();
+      lightboxClose.focus();
+    });
+  });
+  function showScreenshot() {
+    var screenshots = galleries[activeGallery];
+    var image = screenshots[activeIndex].querySelector("img");
+    var caption = screenshots[activeIndex].closest("figure").querySelector(".caption");
+    lightboxImage.src = image.currentSrc || image.src;
+    lightboxImage.alt = image.alt;
+    lightboxCaption.textContent = caption ? caption.textContent : "";
+    lightboxCount.textContent = screenshots.length > 1 ? (activeIndex + 1) + " / " + screenshots.length : "";
+    lightboxPrevious.hidden = lightboxNext.hidden = screenshots.length < 2;
+  }
+  function moveScreenshot(direction) {
+    var n = galleries[activeGallery].length;
+    activeIndex = (activeIndex + direction + n) % n;
+    showScreenshot();
+  }
+  lightboxClose.addEventListener("click", function () { lightbox.close(); });
+  lightboxPrevious.addEventListener("click", function () { moveScreenshot(-1); });
+  lightboxNext.addEventListener("click", function () { moveScreenshot(1); });
+  lightbox.addEventListener("click", function (event) { if (event.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowLeft" && !lightboxPrevious.hidden) moveScreenshot(-1);
+    if (event.key === "ArrowRight" && !lightboxNext.hidden) moveScreenshot(1);
+  });
+  // back to the screenshot that opened it, not the top of the page
+  lightbox.addEventListener("close", function () {
+    lightboxImage.removeAttribute("src");
+    if (opener) opener.focus();
+  });
+</script>
+</body>
+</html>
