@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Small, sharp apps for Mac. One job each, running entirely on your own machine.">
+<title>Small, sharp apps for Mac &mdash; hub</title>
+</head>
+<body>
+
+<a class="sr-only" href="#main">Skip to content</a>
+
+<style>
+  :root{
+    --void:#08090B;
+    --stage:#0D0F12;
+    --riser:#14171B;
+    --edge:#1F242A;
+    --edge-lit:#2C333B;
+
+    --white:#F2F4F6;
+    --grey:#98A1AC;
+    --dim:#7C8896;
+
+    --tidyshelf:#E9A23B;
+    --picshift:#39C6A8;
+    --fgh:#6C8EF5;
+
+    --alarm:#E9573F;
+
+    --sans:"SF Pro Display","Helvetica Neue",Helvetica,system-ui,-apple-system,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+
+    --gut:clamp(1.25rem,5vw,4rem);
+  }
+
+  /* light preference: the stage is raised, not inverted */
+  @media (prefers-color-scheme:light){
+    :root{
+      --void:#15181C;
+      --stage:#1B1F24;
+      --riser:#22272D;
+      --edge:#2E353D;
+      --edge-lit:#3D454F;
+      --grey:#A6AEB9;
+      --dim:#828E9C;
+    }
+  }
+  :root[data-theme="light"]{
+    --void:#15181C; --stage:#1B1F24; --riser:#22272D;
+    --edge:#2E353D; --edge-lit:#3D454F;
+    --grey:#A6AEB9; --dim:#828E9C;
+  }
+  :root[data-theme="dark"]{
+    --void:#08090B; --stage:#0D0F12; --riser:#14171B;
+    --edge:#1F242A; --edge-lit:#2C333B;
+    --grey:#98A1AC; --dim:#7C8896;
+  }
+
+  body{
+    background:var(--void);
+    color:var(--white);
+    font-family:var(--sans);
+    line-height:1.55;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .shell{max-width:78rem;margin:0 auto;padding-inline:var(--gut)}
+
+  a{color:inherit;text-decoration:none}
+  a:focus-visible,button:focus-visible,input:focus-visible{
+    outline:2px solid var(--white);outline-offset:3px;border-radius:3px;
+  }
+
+  .kicker{
+    font-family:var(--mono);
+    font-size:.6875rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--dim);
+  }
+
+  /* ---------------- top bar ---------------- */
+  .bar{
+    position:sticky;top:0;z-index:50;
+    background:color-mix(in srgb,var(--void) 82%,transparent);
+    backdrop-filter:saturate(150%) blur(14px);
+    border-bottom:1px solid var(--edge);
+  }
+  .bar .shell{
+    display:flex;align-items:center;gap:2rem;
+    padding-block:.9rem;
+  }
+  .wordmark{
+    font-size:.9375rem;font-weight:600;letter-spacing:-.01em;
+  }
+  .bar nav{
+    margin-left:auto;display:flex;gap:1.75rem;
+    font-size:.8125rem;color:var(--grey);
+  }
+  .bar nav a{transition:color .18s ease}
+  .bar nav a:hover{color:var(--white)}
+
+  /* ---------------- hero ---------------- */
+  .hero{
+    position:relative;
+    overflow:hidden;               /* the glow must not widen the page */
+    padding-block:clamp(5rem,17vw,11rem) clamp(4rem,10vw,7rem);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:-20% 0 30% 0;
+    background:radial-gradient(60% 55% at 50% 30%,#7E8CA010,transparent 72%);
+    pointer-events:none;
+  }
+  .hero .shell{position:relative}
+  .hero h1{
+    font-size:clamp(2.5rem,7.6vw,5.25rem);
+    line-height:1.02;
+    letter-spacing:-.038em;
+    font-weight:700;
+    max-width:16ch;
+    text-wrap:balance;
+    margin-block:1.5rem 1.75rem;
+  }
+  .hero h1 .fade{color:var(--grey)}
+  .hero .sub{
+    font-size:clamp(1rem,2.1vw,1.25rem);
+    color:var(--grey);
+    max-width:44ch;
+    line-height:1.5;
+  }
+  .herometa{
+    display:flex;flex-wrap:wrap;gap:.75rem 2.25rem;
+    margin-top:clamp(2.5rem,6vw,3.5rem);
+    padding-top:1.5rem;border-top:1px solid var(--edge);
+    font-family:var(--mono);font-size:.75rem;color:var(--dim);
+    font-variant-numeric:tabular-nums;
+  }
+  .herometa b{color:var(--white);font-weight:500}
+
+  .proof{
+    margin-top:1.75rem;max-width:52ch;
+    font-size:.9375rem;color:var(--dim);line-height:1.6;
+    padding-left:.9rem;border-left:2px solid var(--edge-lit);
+  }
+  .proof b{color:var(--grey);font-weight:550}
+  .proof a{
+    color:var(--picshift);white-space:nowrap;
+    border-bottom:1px solid color-mix(in srgb,var(--picshift) 35%,transparent);
+  }
+  .proof a:hover{border-bottom-color:var(--picshift)}
+
+  .herocta{
+    display:inline-flex;align-items:center;gap:.5rem;
+    margin-top:2rem;
+    font-size:1rem;font-weight:600;
+    color:var(--void);background:var(--white);
+    padding:.72rem 1.35rem;border-radius:7px;
+    transition:filter .18s ease,transform .18s ease;
+  }
+  .herocta:hover{filter:brightness(.9);transform:translateY(-1px)}
+  .herocta .chev{transition:transform .18s ease}
+  .herocta:hover .chev{transform:translateX(3px)}
+
+  /* App cards in the empty half of a wide hero. Outlined, never filled, so the
+     white button stays the one call to action. The pills repeat the stages'
+     status pills - change both. */
+  .lineup{display:none;list-style:none;margin:0;padding:0;gap:.75rem}
+  .lineup a{
+    display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+    gap:1rem;align-items:center;
+    padding:.9rem 1.1rem .9rem 1rem;
+    border:1px solid var(--edge);border-radius:14px;
+    background:color-mix(in srgb,var(--riser) 70%,transparent);
+    transition:border-color .18s ease,background-color .18s ease;
+  }
+  .lineup a:hover{
+    border-color:color-mix(in srgb,var(--c) 45%,transparent);
+    background:var(--riser);
+  }
+  /* Apple's margin inside the icon is pulled back, as with .picon */
+  .lineup img{
+    --w:3.5rem;
+    width:var(--w);height:auto;margin:calc(var(--w) / -10);
+    filter:drop-shadow(0 6px 14px #00000080);
+  }
+  .lineup b{display:block;font-size:1.0625rem;font-weight:600;letter-spacing:-.01em}
+  .lineup small{display:block;font-size:.8125rem;color:var(--grey);margin-top:.1rem}
+  @media (min-width:64rem){
+    .hero .shell{
+      display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+      column-gap:clamp(3rem,6vw,6rem);
+    }
+    .hero .shell > *{grid-column:1}
+    .hero .herocta{justify-self:start}
+    .hero .herometa,.hero .proof{grid-column:1 / -1}
+    .hero .lineup{display:grid;grid-column:2;grid-row:1 / span 4;align-self:center}
+  }
+
+  /* ---------------- product stages ---------------- */
+  .stage{
+    position:relative;
+    padding-block:clamp(4rem,11vw,8rem);
+    border-top:1px solid var(--edge);
+    overflow:hidden;
+    scroll-margin-top:4.5rem;
+  }
+  .stage::before{
+    content:"";position:absolute;
+    left:50%;top:14%;width:min(120%,72rem);aspect-ratio:2/1;
+    transform:translateX(-50%);
+    background:radial-gradient(50% 50% at 50% 50%,
+      color-mix(in srgb,var(--c) 17%,transparent),transparent 70%);
+    pointer-events:none;
+  }
+  .stage .shell{position:relative;z-index:1}
+
+  #apps{scroll-margin-top:4.5rem}
+  .phead{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+  /* Apple draws an icon's body at 824 of 1024 (the Chrome icon got the same
+     margin): pull back a tenth each side so the body lines up with the text */
+  .picon{
+    --w:clamp(3rem,8vw,4rem);
+    width:var(--w);height:auto;flex:none;
+    margin-inline:calc(var(--w) / -10);
+    filter:drop-shadow(0 8px 18px #00000080);
+  }
+  .pname{
+    font-size:clamp(1.875rem,4.6vw,3rem);
+    font-weight:700;letter-spacing:-.032em;line-height:1;
+    margin:0;
+  }
+  .pstate{
+    font-family:var(--mono);font-size:.6875rem;
+    letter-spacing:.14em;text-transform:uppercase;
+    color:var(--c);
+    border:1px solid color-mix(in srgb,var(--c) 42%,transparent);
+    background:color-mix(in srgb,var(--c) 11%,transparent);
+    padding:.25rem .6rem;border-radius:99px;
+  }
+  .pline{
+    font-size:clamp(1.0625rem,2.2vw,1.375rem);
+    color:var(--grey);max-width:46ch;line-height:1.45;
+  }
+  .pterms{
+    display:flex;flex-wrap:wrap;gap:.5rem 1.75rem;
+    margin-top:1.25rem;
+    font-family:var(--mono);font-size:.75rem;color:var(--dim);
+    font-variant-numeric:tabular-nums;
+  }
+  .pterms .upd{
+    color:var(--c);
+    display:inline-flex;align-items:center;gap:.45rem;
+  }
+  .pterms .upd::before{
+    content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--c);flex:none;
+  }
+  .pcta{
+    display:inline-flex;align-items:center;gap:.5rem;
+    margin-top:1.75rem;
+    font-size:.9375rem;font-weight:550;
+    color:var(--void);background:var(--c);
+    padding:.6rem 1.15rem;border-radius:6px;
+    transition:transform .18s ease,filter .18s ease;
+  }
+  .pcta:hover{transform:translateY(-1px);filter:brightness(1.08)}
+  .pcta.ghost{
+    background:transparent;color:var(--grey);
+    border:1px solid var(--edge-lit);
+  }
+  .pcta.ghost:hover{color:var(--white);border-color:var(--white)}
+
+  /* ---------------- app captures ---------------- */
+  /* PicShift: three captures of one window, stacked in one place and switched
+     by the steps. Never side by side - they share a sidebar. Same alpha rule
+     as .trio. */
+  .steps{
+    display:flex;flex-wrap:wrap;gap:.5rem;
+    margin-top:clamp(2.5rem,6vw,4rem);
+  }
+  .steps button{
+    font-family:var(--mono);font-size:.75rem;font-weight:500;
+    color:var(--grey);background:transparent;
+    border:1px solid var(--edge-lit);border-radius:99px;
+    padding:.55rem 1rem;
+  }
+  .steps button:hover{filter:none;transform:none;color:var(--white)}
+  .steps button[aria-selected="true"]{color:var(--void);background:var(--c);border-color:var(--c)}
+  .steps .n{opacity:.6;margin-right:.45rem}
+  .wins{display:grid;width:min(100%,64rem);margin-top:1.25rem}
+  .win{
+    grid-area:1 / 1;margin:0;
+    transition:opacity .45s ease,visibility 0s .45s;
+  }
+  /* hidden, not only transparent: a state out of view can be neither
+     clicked, nor tabbed to, nor read out */
+  .win:not(.on){opacity:0;visibility:hidden}
+  .win.on{transition-delay:0s}
+  .zoom{
+    display:block;padding:0;border:0;border-radius:0;
+    background:transparent;color:inherit;line-height:0;cursor:zoom-in;
+  }
+  .zoom:hover{filter:brightness(1.06)}
+  .zoom:focus-visible{outline-color:var(--c);outline-offset:6px}
+  .win .zoom{width:100%}
+  .win img{
+    display:block;width:100%;height:auto;
+    filter:drop-shadow(0 30px 60px #000000CC)
+           drop-shadow(0 0 40px color-mix(in srgb,var(--c) 30%,transparent));
+  }
+
+  .strips{
+    list-style:none;
+    display:flex;flex-wrap:wrap;gap:.5rem;
+    margin-top:1.5rem;max-width:44rem;padding-inline-start:0;
+  }
+  .strips li{
+    font-size:.8125rem;color:var(--grey);
+    background:color-mix(in srgb,var(--c) 8%,transparent);
+    border:1px solid color-mix(in srgb,var(--c) 26%,transparent);
+    border-radius:99px;padding:.3rem .8rem;
+    display:inline-flex;align-items:center;gap:.45rem;
+  }
+  .strips .opt{
+    font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim);
+  }
+  kbd{
+    font-family:var(--mono);font-size:.6875rem;
+    color:var(--grey);background:var(--riser);
+    border:1px solid var(--edge-lit);border-bottom-width:2px;
+    border-radius:4px;padding:.05rem .3rem;
+    white-space:nowrap;
+  }
+
+  /* FGH: the PNGs carry their own transparent rounded corners. No frame,
+     border-radius or overflow clipping here - any of them puts a seam back -
+     and shadows go through drop-shadow(), which follows the alpha. */
+  .trio{
+    display:flex;align-items:flex-end;justify-content:center;
+    gap:clamp(-2rem,-1vw,1rem);
+    margin-top:clamp(2.5rem,6vw,4rem);
+    flex-wrap:wrap;
+  }
+  .pane{margin:0;text-align:center}
+  .pane .zoom{display:inline-block}
+  .pane img{
+    display:block;height:auto;
+    filter:drop-shadow(0 24px 48px #000000B3);
+  }
+  .pane.back img{
+    width:clamp(9rem,20vw,16rem);
+    opacity:.72;
+  }
+  .pane.front img{
+    width:clamp(11rem,26vw,21rem);
+    filter:drop-shadow(0 30px 60px #000000CC)
+           drop-shadow(0 0 40px color-mix(in srgb,var(--c) 30%,transparent));
+  }
+  .pane figcaption{
+    font-family:var(--mono);font-size:.6875rem;
+    color:var(--dim);margin-top:1rem;
+  }
+  .pane.front figcaption{color:var(--grey)}
+  .trio .front{order:2;z-index:2}
+  .trio .back:first-of-type{order:1}
+  .trio .back:last-of-type{order:3}
+  @media (max-width:52rem){
+    .trio{gap:1.5rem}
+    .pane.back img{opacity:.85}
+  }
+
+  /* TidyShelf: the popup over its reader page, as Chrome shows it. The reader
+     spans columns 1-2, the popup 2-3, so they share the second. */
+  .duo{
+    display:grid;grid-template-columns:46fr 12fr 18fr 24fr;align-items:start;
+    width:min(100%,58rem);margin-top:clamp(2.5rem,6vw,4rem);
+  }
+  .duo .pane{grid-row:1}
+  .duo .back{grid-column:1 / 3}
+  /* percentage margins on a grid item run off its own area's width */
+  .duo .front{grid-column:2 / 4;margin-top:14%;z-index:2}
+  .duo .pane .zoom{display:block;width:100%}
+  .duo .pane img{width:100%}
+  .duo .back img{opacity:.8}
+
+  /* ---------------- who ---------------- */
+  .who{border-top:1px solid var(--edge);padding-block:clamp(3.5rem,8vw,5.5rem);scroll-margin-top:4.5rem}
+  .whogrid{
+    display:flex;gap:clamp(1.5rem,4vw,2.75rem);
+    align-items:flex-start;flex-wrap:wrap;margin-top:1.5rem;
+  }
+  .portrait{
+    width:7.5rem;height:7.5rem;flex:none;border-radius:10px;
+    background:var(--riser);border:1px dashed var(--edge-lit);
+    display:grid;place-items:center;
+  }
+  .portraitnote{
+    font-family:var(--mono);font-size:.625rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim);text-align:center;line-height:1.6;
+  }
+  .whotext{flex:1 1 22rem;min-width:0}
+  .whotext h2{
+    font-size:clamp(1.375rem,3vw,1.75rem);
+    font-weight:700;letter-spacing:-.026em;
+  }
+  .whowhere{
+    font-family:var(--mono);font-size:.75rem;color:var(--dim);
+    margin-top:.3rem;margin-bottom:1rem;
+  }
+  .whotext p{color:var(--grey);max-width:56ch}
+  .contact{margin-top:1.15rem;font-family:var(--mono);font-size:.8125rem}
+  .contact a{
+    color:var(--white);
+    border-bottom:1px solid var(--edge-lit);
+  }
+  .contact a:hover{border-bottom-color:var(--white)}
+  .contact .sep{color:var(--dim);margin-inline:.6rem}
+
+  /* ---------------- email ---------------- */
+  .signup{
+    border-top:1px solid var(--edge);
+    padding-block:clamp(4rem,10vw,7rem);
+    position:relative;overflow:hidden;scroll-margin-top:4.5rem;
+  }
+  .signup::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(46% 60% at 50% 0%,#8FA0B812,transparent 70%);
+    pointer-events:none;
+  }
+  .signup .shell{position:relative;max-width:46rem;text-align:center}
+  .signup h2{
+    font-size:clamp(1.75rem,4.4vw,2.75rem);
+    font-weight:700;letter-spacing:-.03em;line-height:1.08;
+    margin-block:1rem .85rem;text-wrap:balance;
+  }
+  .signup p{color:var(--grey);max-width:40ch;margin-inline:auto}
+  form{
+    display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;
+    margin-top:2rem;
+  }
+  input[type=email]{
+    flex:1 1 18rem;max-width:24rem;
+    font:inherit;font-size:.9375rem;color:var(--white);
+    background:var(--stage);
+    border:1px solid var(--edge-lit);
+    border-radius:7px;padding:.7rem .9rem;
+  }
+  input[type=email]::placeholder{color:var(--dim)}
+  button{
+    font:inherit;font-size:.9375rem;font-weight:600;
+    color:var(--void);background:var(--white);
+    border:0;border-radius:7px;padding:.7rem 1.4rem;cursor:pointer;
+    transition:filter .18s ease,transform .18s ease;
+  }
+  button:hover{filter:brightness(.9);transform:translateY(-1px)}
+  /* must outrank .signup p's 40ch measure, or they wrap in a narrow column */
+  .signup .note{margin-top:1rem;max-width:none;font-family:var(--mono);font-size:.6875rem;color:var(--dim)}
+  .signup .err{margin-top:.9rem;max-width:none;font-family:var(--mono);font-size:.75rem;color:var(--alarm)}
+  input[type=email][aria-invalid="true"]{border-color:var(--alarm)}
+  .ok{
+    display:none;margin-top:2rem;
+    font-family:var(--mono);font-size:.875rem;color:var(--picshift);
+  }
+  .signup.sent form,.signup.sent .note,.signup.sent .err{display:none}
+  .signup.sent .ok{display:block}
+  .mailbtn{
+    display:inline-block;margin-top:2rem;
+    font-size:.9375rem;font-weight:600;
+    color:var(--void);background:var(--white);
+    border-radius:7px;padding:.7rem 1.4rem;
+    transition:filter .18s ease,transform .18s ease;
+  }
+  .mailbtn:hover{filter:brightness(.9);transform:translateY(-1px)}
+
+  /* ---------------- screenshot detail ---------------- */
+  .lightbox{
+    inset:0;width:auto;height:auto;max-width:none;max-height:none;
+    margin:0;padding:clamp(1rem,3vw,2rem);
+    color:var(--white);background:transparent;border:0;overflow:hidden;
+  }
+  .lightbox[open]{display:grid;place-items:center}
+  .lightbox::backdrop{background:#050608DE;backdrop-filter:blur(10px)}
+  .lightbox-figure{
+    display:grid;justify-items:center;margin:0;
+    max-width:100%;max-height:100%;
+  }
+  .lightbox img{
+    display:block;max-width:100%;max-height:calc(100dvh - 7rem);
+    filter:drop-shadow(0 28px 60px #000000B3);object-fit:contain;
+  }
+  .lightbox-caption{
+    display:flex;gap:.8rem;justify-content:center;align-items:baseline;
+    margin:1rem 4rem 0;font-family:var(--mono);font-size:.75rem;
+    color:var(--grey);line-height:1.45;text-align:center;
+  }
+  .lightbox-count{color:var(--dim);white-space:nowrap}
+  .lightbox-close,.lightbox-nav{
+    position:absolute;z-index:1;display:grid;place-items:center;
+    width:2.75rem;height:2.75rem;padding:0;
+    color:var(--white);background:#14171BD9;
+    border:1px solid var(--edge-lit);border-radius:50%;
+    backdrop-filter:blur(10px);
+  }
+  .lightbox-close{top:clamp(1rem,3vw,2rem);right:clamp(1rem,3vw,2rem)}
+  .lightbox-close span{font-size:1.5rem;font-weight:300;line-height:1}
+  .lightbox-nav{top:50%;transform:translateY(-50%);font-size:1.25rem}
+  .lightbox-nav.prev{left:clamp(.75rem,2vw,2rem)}
+  .lightbox-nav.next{right:clamp(.75rem,2vw,2rem)}
+  .lightbox-nav:hover,.lightbox-close:hover{background:var(--riser);filter:none}
+  .inspect{color:var(--dim);white-space:nowrap}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+  .sr-only:focus{
+    position:fixed;top:.75rem;left:.75rem;z-index:100;
+    width:auto;height:auto;margin:0;overflow:visible;clip:auto;
+    padding:.6rem 1rem;border-radius:7px;
+    background:var(--white);color:var(--void);
+    font-size:.875rem;font-weight:600;
+  }
+
+  /* ---------------- writing ---------------- */
+  .notes{border-top:1px solid var(--edge);padding-block:clamp(3.5rem,8vw,5.5rem);scroll-margin-top:4.5rem}
+  .note-row{
+    display:flex;gap:1.25rem;align-items:baseline;flex-wrap:wrap;
+    padding-block:1.15rem;border-bottom:1px solid var(--edge);
+  }
+  .note-row .t{font-size:1.0625rem;font-weight:550;letter-spacing:-.012em;flex:1 1 20rem}
+  .note-row .d{color:var(--dim);font-family:var(--mono);font-size:.75rem}
+  .note-row.soon .t{color:var(--dim);font-weight:400}
+
+  /* ---------------- footer ---------------- */
+  footer{
+    border-top:1px solid var(--edge);
+    padding-block:2.25rem 3.5rem;
+    font-family:var(--mono);font-size:.75rem;color:var(--dim);
+  }
+  footer .shell{display:flex;gap:1rem 1.75rem;flex-wrap:wrap;align-items:baseline}
+  /* wraps like .shell: a long label moves to its own row */
+  footer .r{margin-left:auto;display:flex;flex-wrap:wrap;gap:1rem 1.75rem}
+  footer a{border-bottom:1px solid var(--edge)}
+  footer a:hover{color:var(--white)}
+
+  @media (max-width:44rem){
+    /* only Email fits; keep it so phones can still reach the list */
+    .bar nav{gap:0}
+    .bar nav a{padding-block:.35rem}
+    .bar nav a:not([href="#email"]){display:none}
+    /* one row of three segments; pills would wrap to three rows */
+    .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .steps button{font-size:.6875rem;line-height:1.35;padding:.55rem .5rem;border-radius:12px}
+    .steps .n{display:block;margin:0 0 .15rem}
+    /* phone: give both captures more of the row, keep the overlap */
+    .duo{grid-template-columns:52fr 18fr 30fr}
+    footer .r{margin-left:0;width:100%}
+    .lightbox{padding:1rem}
+    .lightbox img{max-height:calc(100dvh - 6.5rem)}
+    .lightbox-caption{margin-inline:3.25rem;margin-top:.75rem}
+    .lightbox-close{top:1rem;right:1rem}
+    .lightbox-nav{top:auto;bottom:1.25rem;transform:none}
+    .lightbox-nav.prev{left:calc(50% - 3.25rem)}
+    .lightbox-nav.next{right:calc(50% - 3.25rem)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+
+<header class="bar">
+  <div class="shell">
+    <span class="wordmark"><a href="./">Yaroslav Tkachenko</a></span>
+    <nav>
+      <a href="#apps">Apps</a>
+      <a href="#who">About</a>
+      <a href="#email">Email</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="shell">
+    <span class="kicker">Independent &middot; macOS &amp; Chrome</span>
+    <h1>
+      Small, sharp apps
+      <span class="fade">for Mac.</span>
+    </h1>
+    <p class="sub">
+      One job each, done properly, running entirely on your own machine.
+      No accounts, no cloud, nothing to leak.
+    </p>
+
+    <a class="herocta" href="#picshift">
+      See PicShift <span class="chev">&rarr;</span>
+    </a>
+
+    <ul class="lineup" aria-label="The apps">
+      <li><a href="#picshift" style="--c:var(--picshift)">
+        <img src="images/icon-picshift.png" width="160" height="160" alt="" />
+        <span><b>PicShift</b><small>Batch photo converter for Mac</small></span>
+        <span class="pstate">October 2026</span>
+      </a></li>
+      <li><a href="#fgh" style="--c:var(--fgh)">
+        <img src="images/icon-fgh.png" width="160" height="160" alt="" />
+        <span><b>FGH</b><small>Cleans everything you copy</small></span>
+        <span class="pstate">In build</span>
+      </a></li>
+      <li><a href="#tidyshelf" style="--c:var(--tidyshelf)">
+        <img src="images/icon-tidyshelf.png" width="160" height="160" alt="" />
+        <span><b>TidyShelf</b><small>Read later, offline, in Chrome</small></span>
+        <span class="pstate">Shipping</span>
+      </a></li>
+    </ul>
+
+    <div class="herometa">
+      <span>One-time purchase</span>
+      <span>Runs entirely offline</span>
+      <span>Support answered in <b>2 days</b></span>
+      <span>Shipping since <b>Mar 2026</b></span>
+    </div>
+
+    <p class="proof">
+      <b>25 ideas rejected before a line of code.</b>
+      Half-finished utilities are this category&rsquo;s plague, so I start few
+      things and finish them.
+    </p>
+  </div>
+</section>
+
+<div id="apps">
+<!-- ===================== PICSHIFT ===================== -->
+<section class="stage" id="picshift" style="--c:var(--picshift)">
+  <div class="shell">
+    <div class="phead">
+      <img class="picon" src="images/icon-picshift.png" width="160" height="160" alt="" />
+      <h2 class="pname">PicShift</h2>
+      <span class="pstate">October 2026</span>
+    </div>
+    <p class="pline">
+      Drop in a folder of photos, get them all converted, resized and
+      stripped of metadata. Nothing is uploaded &mdash; the app makes zero
+      network calls.
+    </p>
+    <div class="pterms">
+      <span>$9.99 once &middot; no subscription</span>
+      <span>Mac App Store</span>
+      <span>macOS 14+</span>
+      <span class="upd">Final testing &middot; ships October 2026</span>
+    </div>
+    <a class="pcta" href="#email">Email me the day it ships</a>
+
+    <!-- captions are sr-only: they serve the lightbox and screen readers -->
+    <div class="steps" role="tablist" aria-label="PicShift, step by step">
+      <button type="button" role="tab" id="step-drop" aria-controls="state-drop" aria-selected="false" tabindex="-1"><span class="n">01</span>Drop in a folder</button>
+      <button type="button" role="tab" id="step-forecast" aria-controls="state-forecast" aria-selected="true"><span class="n">02</span>See the size first</button>
+      <button type="button" role="tab" id="step-done" aria-controls="state-done" aria-selected="false" tabindex="-1"><span class="n">03</span>Check what it saved</button>
+    </div>
+    <div class="wins">
+      <figure class="win" id="state-drop" role="tabpanel" aria-labelledby="step-drop">
+        <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog" aria-label="Open PicShift drop zone full size">
+          <img src="images/picshift-empty.png" width="1536" height="1066" loading="lazy"
+               alt="PicShift waiting for photos: a drop zone for photos or folders in HEIC, JPG, PNG, TIFF, WebP, AVIF, BMP or GIF, with the output already set to JPEG at quality 80, longest side 1920 px, location and camera info removed." />
+        </button>
+        <figcaption class="sr-only"><span class="caption">Drop in photos or a whole folder</span></figcaption>
+      </figure>
+      <figure class="win on" id="state-forecast" role="tabpanel" aria-labelledby="step-forecast">
+        <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog" aria-label="Open PicShift size forecast full size">
+          <img src="images/picshift-forecast.png" width="1536" height="1066" loading="lazy"
+               alt="PicShift with eight photos queued for JPEG at quality 80, longest side 1920 px, location and camera info removed. Before converting it forecasts 14.66 MB down to about 6.82 MB, about 53% smaller." />
+        </button>
+        <figcaption class="sr-only"><span class="caption">See the size before you convert</span></figcaption>
+      </figure>
+      <figure class="win" id="state-done" role="tabpanel" aria-labelledby="step-done">
+        <button class="zoom" type="button" data-gallery="picshift" aria-haspopup="dialog" aria-label="Open PicShift batch result full size">
+          <img src="images/picshift-converted.png" width="1536" height="1066" loading="lazy"
+               alt="The same batch converted: 8 of 8 files done, 14.66 MB down to 6.46 MB, 8.20 MB saved, each file checked off with its final size." />
+        </button>
+        <figcaption class="sr-only"><span class="caption">Every batch reports what it saved</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FGH ===================== -->
+<section class="stage" id="fgh" style="--c:var(--fgh)">
+  <div class="shell">
+    <div class="phead">
+      <img class="picon" src="images/icon-fgh.png" width="160" height="160" alt="" />
+      <h2 class="pname">FGH</h2>
+      <span class="pstate">In build</span>
+    </div>
+    <p class="pline">
+      Nothing you copy is just text. FGH cleans it the moment you press
+      &#8984;C &mdash; no button to remember, no step to add.
+    </p>
+
+    <ul class="strips" aria-label="What FGH removes">
+      <li>Rich-text formatting</li>
+      <li>utm_*, fbclid and friends</li>
+      <li>Invisible AI watermarks</li>
+      <li>HTML entities</li>
+      <li>Emoji <span class="opt">optional</span></li>
+    </ul>
+
+    <div class="pterms">
+      <span>Paid from day one</span>
+      <span>Mac App Store + direct</span>
+      <span>Encrypted history, <kbd>&#8997;&#8984;1</kbd>&ndash;<kbd>9</kbd></span>
+      <span class="upd">v2.5 in build &middot; last commit 27 Sep 2026</span>
+    </div>
+    <a class="pcta ghost" href="#email">Email me when FGH ships</a>
+
+    <div class="trio">
+      <figure class="pane back">
+        <button class="zoom" type="button" data-gallery="fgh" aria-haspopup="dialog" aria-label="Open FGH cleaning options full size">
+          <img src="images/fgh-clean-text.png" width="560" height="666" loading="lazy"
+               alt="FGH cleaning options: trim whitespace, clean URL tracking, remove emojis, AI watermarks, HTML entities" />
+        </button>
+        <figcaption><span class="caption">Pick what gets stripped</span> <span class="inspect">Open full size &rarr;</span></figcaption>
+      </figure>
+      <figure class="pane front">
+        <button class="zoom" type="button" data-gallery="fgh" aria-haspopup="dialog" aria-label="Open FGH clipboard history full size">
+          <img src="images/fgh-clipboard-history.png" width="680" height="809" loading="lazy"
+               alt="FGH clipboard history showing 19 hidden characters removed, 5 trackers stripped and dashes fixed" />
+        </button>
+        <figcaption><span class="caption">Every entry says what it fixed</span> <span class="inspect">Open full size &rarr;</span></figcaption>
+      </figure>
+      <figure class="pane back">
+        <button class="zoom" type="button" data-gallery="fgh" aria-haspopup="dialog" aria-label="Open FGH settings full size">
+          <img src="images/fgh-settings.png" width="560" height="666" loading="lazy"
+               alt="FGH settings: appearance, launch at login, accessibility permission, delete all data" />
+        </button>
+        <figcaption><span class="caption">Wipe the lot in one click</span> <span class="inspect">Open full size &rarr;</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TIDYSHELF ===================== -->
+<section class="stage" id="tidyshelf" style="--c:var(--tidyshelf)">
+  <div class="shell">
+    <div class="phead">
+      <img class="picon" src="images/icon-tidyshelf.png" width="160" height="160" alt="" />
+      <h2 class="pname">TidyShelf</h2>
+      <span class="pstate">Shipping</span>
+    </div>
+    <p class="pline">
+      Save an article now, read it when you actually have time. Everything
+      stays in your browser &mdash; no account, no sync server, nothing to leak.
+    </p>
+    <div class="pterms">
+      <span>Free</span>
+      <span>Chrome Web Store</span>
+      <span>5.0&#9733;</span>
+      <span class="upd">Updated 24 Sep 2026 &middot; v1.0.6</span>
+    </div>
+    <a class="pcta" href="https://chromewebstore.google.com/detail/tidyshelf-read-later-arti/gonfhagnfhpgojiffekkpopdhafenoop">Add TidyShelf to Chrome</a>
+
+    <!-- captions are sr-only: they serve the lightbox and screen readers -->
+    <div class="duo">
+      <figure class="pane front">
+        <button class="zoom" type="button" data-gallery="tidyshelf" aria-haspopup="dialog" aria-label="Open TidyShelf popup full size">
+          <img src="images/tidyshelf-popup.png" width="760" height="1200" loading="lazy"
+               alt="TidyShelf's popup: a button to save the open page, a search box, filters for all, unread and each tag, and the library grouped by day - a thecue.media article on niacin and niacinamide saved two hours ago, then Typography from Wikipedia." />
+        </button>
+        <figcaption class="sr-only"><span class="caption">Save the page you are on in one click</span></figcaption>
+      </figure>
+      <figure class="pane back">
+        <button class="zoom" type="button" data-gallery="tidyshelf" aria-haspopup="dialog" aria-label="Open TidyShelf reader full size">
+          <img src="images/tidyshelf-reader.png" width="1080" height="1114" loading="lazy"
+               alt="TidyShelf's reader: the saved thecue.media article on niacin versus niacinamide in a clean layout, with passages highlighted in yellow and green, and controls for highlight colour, text size and theme." />
+        </button>
+        <figcaption class="sr-only"><span class="caption">Read it later, offline, with your highlights</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- ===================== WHO ===================== -->
+<section class="who" id="who">
+  <div class="shell">
+    <span class="kicker">Who you are buying from</span>
+    <div class="whogrid">
+      <!-- photo: <div class="portrait"><img …></div> goes here -->
+      <div class="whotext">
+        <h2>Yaroslav Tkachenko</h2>
+        <p class="whowhere">Ko&scaron;ice, Slovakia &middot; building Mac software since 2026</p>
+        <p>
+          One person, no company, no investors. That is the whole operation.
+          It means I answer my own support email &mdash; usually the same day,
+          two days at the outside &mdash; and it means I keep the number of
+          apps small enough that none of them rot.
+        </p>
+        <p class="contact">
+          <a href="mailto:tkachenko.ya@icloud.com">tkachenko.ya@icloud.com</a>
+          <span class="sep">&middot;</span>
+          <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EMAIL ===================== -->
+<section class="signup" id="email">
+  <div class="shell">
+    <span class="kicker">The list</span>
+    <h2>Know the day PicShift ships</h2>
+    <p>
+      One email per release &mdash; about four a year. Sometimes the specific
+      fact that killed an idea which looked good on paper. No weekly digest,
+      no funnel.
+    </p>
+    <a class="mailbtn" href="mailto:tkachenko.ya@icloud.com?subject=Tell%20me%20when%20PicShift%20ships">Put me on the list</a>
+    <p class="note">Kept by hand for now: one email from you puts you on it, and &ldquo;stop&rdquo; takes you off.</p>
+  </div>
+</section>
+
+
+</main>
+
+<footer>
+  <div class="shell">
+    <span>Yaroslav Tkachenko &middot; Slovakia</span>
+    <span class="r">
+      <a href="picshift/">PicShift support</a>
+      <a href="#email">Email list</a>
+      <a href="https://github.com/yaroslavtkachenko-dev">GitHub</a>
+    </span>
+  </div>
+</footer>
+
+<dialog class="lightbox" aria-labelledby="lightbox-caption">
+  <button class="lightbox-close" type="button" aria-label="Close screenshot"><span aria-hidden="true">&times;</span></button>
+  <button class="lightbox-nav prev" type="button" aria-label="Previous screenshot"><span aria-hidden="true">&larr;</span></button>
+  <figure class="lightbox-figure">
+    <img alt="" />
+    <figcaption class="lightbox-caption" id="lightbox-caption"><span></span><span class="lightbox-count"></span></figcaption>
+  </figure>
+  <button class="lightbox-nav next" type="button" aria-label="Next screenshot"><span aria-hidden="true">&rarr;</span></button>
+</dialog>
+
+<script>
+  var box = document.querySelector(".signup");
+  var form = box.querySelector("form");
+  var input = box.querySelector("input");
+  var error = box.querySelector(".err");
+
+  function clearError() {
+    input.removeAttribute("aria-invalid");
+    input.removeAttribute("aria-describedby");
+    error.hidden = true;
+  }
+
+  // the form is out for now; without this guard the rest of the script never ran
+  if (form) form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = input.value.trim();
+    if (v.indexOf("@") < 1 || v.length < 5) {
+      // the error rides on aria and an alert, not on a red border alone
+      input.setAttribute("aria-invalid", "true");
+      input.setAttribute("aria-describedby", "email-error");
+      error.hidden = false;
+      input.focus();
+      return;
+    }
+    clearError();
+    box.classList.add("sent");
+  });
+  if (input) input.addEventListener("input", clearError);
+
+  // PicShift steps are tabs: arrows move between them, only one is in the tab order
+  var steps = document.querySelectorAll(".steps [role=tab]");
+  function showStep(step) {
+    steps.forEach(function (other) {
+      var on = other === step;
+      other.setAttribute("aria-selected", on);
+      other.tabIndex = on ? 0 : -1;
+      document.getElementById(other.getAttribute("aria-controls")).classList.toggle("on", on);
+    });
+  }
+  steps.forEach(function (step, index) {
+    step.addEventListener("click", function () { showStep(step); });
+    step.addEventListener("keydown", function (event) {
+      var direction = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+      if (!direction) return;
+      var next = steps[(index + direction + steps.length) % steps.length];
+      showStep(next);
+      next.focus();
+    });
+  });
+
+  var lightbox = document.querySelector(".lightbox");
+  var lightboxImage = lightbox.querySelector("img");
+  var lightboxCaption = lightbox.querySelector(".lightbox-caption span");
+  var lightboxCount = lightbox.querySelector(".lightbox-count");
+  var lightboxClose = lightbox.querySelector(".lightbox-close");
+  var lightboxPrevious = lightbox.querySelector(".lightbox-nav.prev");
+  var lightboxNext = lightbox.querySelector(".lightbox-nav.next");
+  var galleries = {};
+  var activeGallery;
+  var activeIndex;
+
+  document.querySelectorAll(".zoom").forEach(function (trigger) {
+    var name = trigger.dataset.gallery;
+    if (!galleries[name]) galleries[name] = [];
+    galleries[name].push(trigger);
+    trigger.addEventListener("click", function () {
+      activeGallery = trigger.dataset.gallery;
+      activeIndex = galleries[activeGallery].indexOf(trigger);
+      showScreenshot();
+      lightbox.showModal();
+      lightboxClose.focus();
+    });
+  });
+  function showScreenshot() {
+    var screenshots = galleries[activeGallery];
+    var trigger = screenshots[activeIndex];
+    var image = trigger.querySelector("img");
+    var caption = trigger.closest("figure").querySelector(".caption");
+    lightboxImage.src = image.currentSrc || image.src;
+    lightboxImage.alt = image.alt;
+    lightboxCaption.textContent = caption.textContent;
+    lightboxCount.textContent = screenshots.length > 1 ? (activeIndex + 1) + " / " + screenshots.length : "";
+    lightboxPrevious.hidden = screenshots.length < 2;
+    lightboxNext.hidden = screenshots.length < 2;
+  }
+  function moveScreenshot(direction) {
+    var screenshots = galleries[activeGallery];
+    activeIndex = (activeIndex + direction + screenshots.length) % screenshots.length;
+    showScreenshot();
+  }
+  lightboxClose.addEventListener("click", function () { lightbox.close(); });
+  lightboxPrevious.addEventListener("click", function () { moveScreenshot(-1); });
+  lightboxNext.addEventListener("click", function () { moveScreenshot(1); });
+  lightbox.addEventListener("click", function (event) {
+    if (event.target === lightbox) lightbox.close();
+  });
+  lightbox.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowLeft" && !lightboxPrevious.hidden) moveScreenshot(-1);
+    if (event.key === "ArrowRight" && !lightboxNext.hidden) moveScreenshot(1);
+  });
+  lightbox.addEventListener("close", function () { lightboxImage.removeAttribute("src"); });
+</script>
+
+</body>
+</html>

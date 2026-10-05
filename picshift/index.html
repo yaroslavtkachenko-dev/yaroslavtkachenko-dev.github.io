@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Support and privacy policy for PicShift, a batch image converter for macOS.">
+<title>PicShift &mdash; Support &amp; Privacy</title>
+
+<style>
+  /* Tokens are copied from index.html - there is no build step to share them.
+     Change a token there, change it here. */
+  :root{
+    --void:#08090B;
+    --stage:#0D0F12;
+    --riser:#14171B;
+    --edge:#1F242A;
+    --edge-lit:#2C333B;
+
+    --white:#F2F4F6;
+    --grey:#98A1AC;
+    --dim:#7C8896;
+
+    --picshift:#39C6A8;
+
+    --sans:"SF Pro Display","Helvetica Neue",Helvetica,system-ui,-apple-system,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+
+    --gut:clamp(1.25rem,5vw,4rem);
+    --c:var(--picshift);
+  }
+
+  /* light preference: raised, not inverted, as on the hub */
+  @media (prefers-color-scheme:light){
+    :root{
+      --void:#15181C;
+      --stage:#1B1F24;
+      --riser:#22272D;
+      --edge:#2E353D;
+      --edge-lit:#3D454F;
+      --grey:#A6AEB9;
+      --dim:#828E9C;
+    }
+  }
+  :root[data-theme="light"]{
+    --void:#15181C; --stage:#1B1F24; --riser:#22272D;
+    --edge:#2E353D; --edge-lit:#3D454F;
+    --grey:#A6AEB9; --dim:#828E9C;
+  }
+  :root[data-theme="dark"]{
+    --void:#08090B; --stage:#0D0F12; --riser:#14171B;
+    --edge:#1F242A; --edge-lit:#2C333B;
+    --grey:#98A1AC; --dim:#7C8896;
+  }
+
+  body{
+    background:var(--void);
+    color:var(--white);
+    font-family:var(--sans);
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .shell{max-width:78rem;margin:0 auto;padding-inline:var(--gut)}
+
+  a{color:inherit;text-decoration:none}
+  a:focus-visible{outline:2px solid var(--white);outline-offset:3px;border-radius:3px}
+
+  .kicker{
+    font-family:var(--mono);
+    font-size:.6875rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--dim);
+  }
+
+  /* ---------------- top bar ---------------- */
+  .bar{
+    position:sticky;top:0;z-index:50;
+    background:color-mix(in srgb,var(--void) 82%,transparent);
+    backdrop-filter:saturate(150%) blur(14px);
+    border-bottom:1px solid var(--edge);
+  }
+  .bar .shell{display:flex;align-items:center;gap:2rem;padding-block:.9rem}
+  /* the app's Help menu opens #support and #privacy: keep headings clear of the bar */
+  section[id]{scroll-margin-top:4.5rem}
+  .wordmark{font-size:.9375rem;font-weight:600;letter-spacing:-.01em}
+  .bar nav{
+    margin-left:auto;display:flex;gap:1.75rem;
+    font-size:.8125rem;color:var(--grey);
+  }
+  .bar nav a{transition:color .18s ease}
+  .bar nav a:hover{color:var(--white)}
+
+  /* ---------------- page head ---------------- */
+  .head{
+    border-bottom:1px solid var(--edge);
+    padding-block:clamp(3rem,9vw,5rem) clamp(2rem,5vw,3rem);
+  }
+  .head h1{
+    font-size:clamp(2rem,5.4vw,3.25rem);
+    font-weight:700;letter-spacing:-.032em;line-height:1.04;
+    margin-block:1rem .9rem;
+  }
+  .head h1 .fade{color:var(--grey)}
+  .head p{color:var(--grey);max-width:52ch}
+  .jump{
+    display:flex;flex-wrap:wrap;gap:.5rem .75rem;
+    margin-top:1.75rem;
+  }
+  .jump a{
+    font-family:var(--mono);font-size:.75rem;
+    color:var(--grey);
+    border:1px solid var(--edge-lit);border-radius:99px;
+    padding:.3rem .8rem;
+    transition:color .18s ease,border-color .18s ease;
+  }
+  .jump a:hover{color:var(--white);border-color:var(--white)}
+
+  /* ---------------- document body ---------------- */
+  /* no CSS reset, as on the hub: a reset on one page alone shifts its bar */
+  main{padding-block:clamp(2.5rem,7vw,4.5rem) clamp(3rem,8vw,5rem)}
+  .doc{max-width:44rem}
+  .doc section + section{
+    margin-top:clamp(2.75rem,7vw,4rem);
+    padding-top:clamp(2.75rem,7vw,4rem);
+    border-top:1px solid var(--edge);
+  }
+  .doc h2{
+    font-size:clamp(1.375rem,3.2vw,1.875rem);
+    font-weight:700;letter-spacing:-.026em;line-height:1.15;
+    margin-bottom:1rem;
+  }
+  .doc h3{
+    font-size:1.0625rem;font-weight:600;letter-spacing:-.012em;
+    margin-top:2rem;margin-bottom:.6rem;
+  }
+  .doc p{color:var(--grey);margin-bottom:1rem}
+  .doc p:last-child{margin-bottom:0}
+  .doc ul{list-style:none;margin-bottom:1rem;padding-inline-start:0}
+  .doc li{
+    color:var(--grey);position:relative;
+    padding-left:1.1rem;margin-bottom:.45rem;
+  }
+  .doc li::before{
+    content:"";position:absolute;left:0;top:.7em;
+    width:5px;height:5px;border-radius:50%;background:var(--edge-lit);
+  }
+  /* scoped to prose: excluding the pills with :not() outranked the mail button */
+  .doc p a,.doc li a{
+    color:var(--c);
+    border-bottom:1px solid color-mix(in srgb,var(--c) 35%,transparent);
+  }
+  .doc p a:hover,.doc li a:hover{border-bottom-color:var(--c)}
+  .doc strong{color:var(--white);font-weight:600}
+
+  .claim{
+    background:var(--stage);
+    border:1px solid color-mix(in srgb,var(--c) 30%,transparent);
+    border-radius:10px;
+    padding:clamp(1.25rem,4vw,1.75rem);
+    margin-bottom:1.5rem;
+  }
+  .claim p{
+    color:var(--white);font-size:clamp(1.0625rem,2.4vw,1.25rem);
+    font-weight:600;letter-spacing:-.014em;margin:0;
+  }
+  .claim .sub{
+    color:var(--dim);font-size:.8125rem;font-weight:400;
+    font-family:var(--mono);margin-top:.6rem;letter-spacing:0;
+  }
+
+  .mailto{
+    display:inline-flex;align-items:center;gap:.5rem;
+    font-size:.9375rem;font-weight:550;
+    color:var(--void);background:var(--c);
+    padding:.6rem 1.15rem;border-radius:6px;
+    transition:transform .18s ease,filter .18s ease;
+  }
+  .mailto:hover{transform:translateY(-1px);filter:brightness(1.08)}
+  .doc p a.mailto{color:var(--void);border-bottom:0}
+
+  .stamp{
+    font-family:var(--mono);font-size:.75rem;color:var(--dim);
+    margin-top:clamp(2.5rem,6vw,3.5rem);
+    padding-top:1.25rem;border-top:1px solid var(--edge);
+  }
+
+  /* ---------------- footer ---------------- */
+  footer{
+    border-top:1px solid var(--edge);
+    padding-block:2.25rem 3.5rem;
+    font-family:var(--mono);font-size:.75rem;color:var(--dim);
+  }
+  footer .shell{display:flex;gap:1rem 1.75rem;flex-wrap:wrap;align-items:baseline}
+  footer .r{margin-left:auto;display:flex;gap:1.75rem}
+  footer a{border-bottom:1px solid var(--edge)}
+  footer a:hover{color:var(--white)}
+
+  @media (max-width:44rem){
+    .bar nav{display:none}
+    footer .r{margin-left:0;width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="shell">
+    <span class="wordmark"><a href="../">Yaroslav Tkachenko</a></span>
+    <nav>
+      <a href="../#apps">Apps</a>
+      <a href="../#who">About</a>
+      <a href="../#email">Email</a>
+    </nav>
+  </div>
+</div>
+
+<section class="head">
+  <div class="shell"><div class="doc">
+    <span class="kicker">PicShift</span>
+    <h1>Support <span class="fade">&amp; privacy</span></h1>
+    <p>
+      PicShift is a batch image converter for macOS. It converts, resizes and
+      strips metadata from photos entirely on your own Mac.
+    </p>
+    <div class="jump">
+      <a href="#support">Get help</a>
+      <a href="#purchases">Purchases &amp; refunds</a>
+      <a href="#privacy">Privacy policy</a>
+    </div>
+  </div></div>
+</section>
+
+<main>
+  <div class="shell"><div class="doc">
+
+    <section id="support">
+      <h2>Get help</h2>
+      <p>
+        If something does not work the way you expected, write to me directly.
+        One person answers this address &mdash; usually the same day, two
+        business days at the outside.
+      </p>
+      <p>
+        <a class="mailto" href="mailto:tkachenko.ya@icloud.com">tkachenko.ya@icloud.com</a>
+      </p>
+      <h3>What to include</h3>
+      <p>
+        These four lines turn a bug report into a fix, and usually save a round
+        trip:
+      </p>
+      <ul>
+        <li>Your macOS version</li>
+        <li>The source file format, and the format you converted to</li>
+        <li>What you expected to happen, and what happened instead</li>
+        <li>Whether it affects every file or just one particular image</li>
+      </ul>
+      <p>
+        Please do not attach photos you would rather not share &mdash; a
+        description of the file is normally enough, and I will ask if a sample
+        is genuinely needed.
+      </p>
+    </section>
+
+    <section id="purchases">
+      <h2>Purchases &amp; refunds</h2>
+      <p>
+        The free tier includes <strong>70 conversions</strong>. PicShift Pro is
+        a <strong>one-time purchase</strong> that unlocks unlimited conversions.
+        There is no subscription and no account to create.
+      </p>
+      <p>
+        Bought it and Pro is not showing up &mdash; on a second Mac, or after
+        reinstalling? Use <strong>Restore Purchases</strong>, in the PicShift
+        menu or on the purchase screen. It re-checks your Apple receipt and
+        turns Pro back on.
+      </p>
+      <p>
+        Payments and refunds are handled by Apple, not by me. Request a refund
+        at <a href="https://reportaproblem.apple.com">reportaproblem.apple.com</a>.
+        I never see your payment details.
+      </p>
+    </section>
+
+    <section id="privacy">
+      <h2>Privacy policy</h2>
+
+      <div class="claim">
+        <p>PicShift does not collect any data.</p>
+        <p class="sub">No analytics &middot; no tracking &middot; no accounts &middot; no network calls</p>
+      </div>
+
+      <p>
+        That is the entire policy. The detail below is only there to say
+        precisely what it means.
+      </p>
+
+      <h3>Your images</h3>
+      <ul>
+        <li>Every conversion runs locally, on your own Mac.</li>
+        <li>Your images are never uploaded anywhere. There is nowhere for them to go.</li>
+        <li>PicShift reads only the files and the output folder you pick yourself, by drag-and-drop or through the file picker.</li>
+        <li>It asks for no other permissions, and holds no access to the rest of your disk.</li>
+      </ul>
+
+      <h3>The network</h3>
+      <p>
+        The app contains no networking code at all. It does not phone home, does
+        not check for updates on its own, and has no analytics or crash-reporting
+        service embedded in it. Updates arrive through the Mac App Store, like
+        any other app you install there.
+      </p>
+
+      <h3>What is stored on your Mac</h3>
+      <ul>
+        <li>Your settings &mdash; output format, quality, resize choice.</li>
+        <li>The output folder you last used, so you do not have to pick it again.</li>
+        <li>A count of how many files you have converted, which is what the free tier is measured against.</li>
+      </ul>
+      <p>
+        All three stay on your machine. None of them is sent anywhere, and none
+        of them identifies you.
+      </p>
+
+      <h3>Purchases</h3>
+      <p>
+        The purchase itself is processed by Apple through the Mac App Store.
+        PicShift asks Apple whether a valid purchase exists and gets back yes or
+        no &mdash; it never receives your name, your email or your payment
+        information.
+      </p>
+
+      <h3>Children</h3>
+      <p>
+        PicShift collects nothing from anyone, of any age.
+      </p>
+
+      <h3>Changes to this policy</h3>
+      <p>
+        If this ever changes, the date below changes with it, and the change is
+        described in the release notes of the version that introduces it.
+      </p>
+    </section>
+
+    <p class="stamp">Last updated 2 October 2026 &middot; PicShift 1.0</p>
+
+  </div></div>
+</main>
+
+<footer>
+  <div class="shell">
+    <span>Yaroslav Tkachenko &middot; Slovakia</span>
+    <span class="r">
+      <a href="../">All apps</a>
+      <a href="../#email">Email list</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>
